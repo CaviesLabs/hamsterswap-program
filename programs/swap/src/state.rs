@@ -21,7 +21,7 @@ pub struct SwapPlatformConfig {
     pub max_allowed_options: u8,
 
     // define whitelisted mint token account
-    pub allowed_mint_account: HashMap<Pubkey, bool>,
+    pub allowed_mint_accounts: Vec<Pubkey>,
 }
 
 // Define handler

@@ -10,7 +10,7 @@ pub struct InitializeSwapPlatformParams {
     pub max_allowed_options: u8,
 
     // define whitelisted mint token account
-    pub allowed_mint_account: HashMap<Pubkey, bool>,
+    pub allowed_mint_accounts: Vec<Pubkey>,
 }
 
 // Define the context, passed in parameters when trigger from deployer.
@@ -36,16 +36,16 @@ pub struct InitializeSwapPlatformContext<'info> {
 // implement the handler
 impl<'info> InitializeSwapPlatformContext<'info> {
     pub fn execute(&mut self, params: InitializeSwapPlatformParams, bump: u8) -> Result<()> {
+        // Handle post initialization
+        self.swap_config.handle_post_initialized().unwrap();
+
         // Assigning values
         let swap_config = &mut self.swap_config;
         swap_config.bump = bump;
         swap_config.owner = *self.owner.key;
-        swap_config.allowed_mint_account = params.allowed_mint_account;
+        swap_config.allowed_mint_accounts = params.allowed_mint_accounts;
         swap_config.max_allowed_items = params.max_allowed_items;
         swap_config.max_allowed_options = params.max_allowed_options;
-
-        // Handle post initialization
-        self.swap_config.handle_post_initialized().unwrap();
 
         Ok(())
     }
