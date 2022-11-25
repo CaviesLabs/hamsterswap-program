@@ -43,7 +43,7 @@ describe("update_swap_program", async () => {
     expect(state.allowedMintAccounts.map(elm => elm.toString()).includes(sampleMintToken.publicKey.toString())).equals(true);
 
     // expect eventLog
-    const transaction = await provider.connection.getParsedTransaction(tx, {commitment: 'confirmed'});
+    const transaction = await provider.connection.getParsedTransaction(tx, { commitment: "confirmed" });
     const eventParser = new EventParser(program.programId, new BorshCoder(program.idl));
     const [event] = eventParser.parseLogs(transaction.meta.logMessages);
 
@@ -51,7 +51,7 @@ describe("update_swap_program", async () => {
     expect(event.data.owner.toString() === deployer.publicKey.toString()).equals(true);
     expect(event.data.maxAllowedOptions === 3).equals(true);
     expect(event.data.maxAllowedItems === 3).equals(true);
-    expect(event.data.allowedMintAccounts.map(elm => elm.toString()).includes(sampleMintToken.publicKey.toString())).equals(true);
+    expect((event.data.allowedMintAccounts as PublicKey[]).map(elm => elm.toString()).includes(sampleMintToken.publicKey.toString())).equals(true);
   });
 
 
