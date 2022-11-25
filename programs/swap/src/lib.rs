@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{system_program, sysvar};
+use anchor_lang::solana_program::{system_program};
 
-use std::collections::HashMap;
+use anchor_spl::token::*;
 
 pub mod action;
 pub mod error;

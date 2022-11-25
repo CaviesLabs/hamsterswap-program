@@ -22,7 +22,7 @@ pub struct InitializeSwapPlatformContext<'info> {
 
     #[account(
         init,
-        seeds = [PLATFORM_SEED, owner.key().as_ref()],
+        seeds = [PLATFORM_SEED, PROGRAM_ID],
         payer = owner,
         space = 10240,
         bump

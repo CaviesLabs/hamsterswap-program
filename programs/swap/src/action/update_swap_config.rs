@@ -22,7 +22,7 @@ pub struct UpdateSwapPlatformContext<'info> {
 
     #[account(
         mut,
-        seeds = [PLATFORM_SEED, owner.key().as_ref()],
+        seeds = [PLATFORM_SEED, PROGRAM_ID],
         bump = swap_config.bump,
         has_one = owner
     )]

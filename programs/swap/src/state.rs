@@ -63,7 +63,7 @@ pub enum SwapItemStatus {
     Redeemed,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, PartialEq)]
 pub struct SwapItem {
     // Define the owner item
     pub owner: Pubkey,
@@ -109,7 +109,7 @@ impl SwapItem {
 }
 
 // ================ Swap Option Interface ================ //
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, PartialEq)]
 pub enum SwapProposalStatus {
     // Declare that the proposal is created
     #[default]
@@ -122,7 +122,7 @@ pub enum SwapProposalStatus {
     Canceled
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct SwapOption {
     // Swap option id
     pub id: String,
@@ -158,5 +158,46 @@ pub struct SwapProposal {
 
     // Define the proposal status
     pub status: SwapProposalStatus,
+}
 
+// Implement some domain logic
+impl SwapProposal {
+    // Define default value
+    fn default() -> SwapProposal {
+        SwapProposal {
+            bump: 0,
+            owner: Pubkey::default(),
+            fulfilled_by: Pubkey::default(),
+            fulfilled_with_option_id: "".to_string(),
+            status: SwapProposalStatus::Created,
+            offered_items: vec![],
+            swap_options: vec![],
+            expired_at: 0,
+        }
+    }
+
+    // validate input
+    pub fn handle_post_initialized(&mut self) -> Result<()> {
+        if self.bump == 0 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if self.owner == Pubkey::default() {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if self.offered_items.len() < 1 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if self.swap_options.len() < 1 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if self.expired_at < Clock::get().unwrap().unix_timestamp as u64 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        return Ok(());
+    }
 }
