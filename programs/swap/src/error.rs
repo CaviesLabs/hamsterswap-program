@@ -17,5 +17,7 @@ pub enum SwapError {
     #[msg("Order expired")]
     OrderExpired,
     #[msg("Invalid Offer")]
-    InvalidOffer
+    InvalidOffer,
+    #[msg("Invalid value")]
+    InvalidValue
 }

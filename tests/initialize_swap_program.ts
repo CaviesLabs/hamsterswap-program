@@ -5,7 +5,7 @@ import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
 
-describe("initialize swap program", async () => {
+describe("initialize_swap_program", async () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
@@ -19,7 +19,7 @@ describe("initialize swap program", async () => {
     deployer.publicKey.toBuffer()
   ], program.programId);
 
-  it("should: deployer should initialize successfully", async () => {
+  it("[initialize_swap_program] should: deployer should initialize successfully", async () => {
     // Initialize first
     await program.methods.initialize({
       maxAllowedItems: new BN(5).toNumber(),
@@ -41,7 +41,7 @@ describe("initialize swap program", async () => {
     expect(state.allowedMintAccounts.map(elm => elm.toString()).includes(deployer.publicKey.toString())).equals(true);
   });
 
-  it("should: cannot re-initialize", async () => {
+  it("[initialize_swap_program] should: cannot re-initialize", async () => {
     try {
       await program.methods.initialize({
         maxAllowedItems: new BN(6).toNumber(),

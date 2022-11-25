@@ -35,11 +35,34 @@ pub struct UpdateSwapPlatformContext<'info> {
 // implement the handler
 impl<'info> UpdateSwapPlatformContext<'info> {
     pub fn execute(&mut self, params: UpdateSwapPlatformParams) -> Result<()> {
+        // throw errors first
+        if params.allowed_mint_accounts.len() < 1 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if params.max_allowed_options < 1 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
+        if params.max_allowed_items < 1 {
+            return Err(SwapError::InvalidValue.into());
+        }
+
         // Assigning values
         let swap_config = &mut self.swap_config;
-        swap_config.allowed_mint_accounts = params.allowed_mint_accounts;
-        swap_config.max_allowed_items = params.max_allowed_items;
-        swap_config.max_allowed_options = params.max_allowed_options;
+        swap_config.allowed_mint_accounts = params.allowed_mint_accounts.clone();
+        swap_config.max_allowed_items = params.max_allowed_items.clone();
+        swap_config.max_allowed_options = params.max_allowed_options.clone();
+
+        // emit event
+        swap_emit!(
+            SwapConfigUpdated {
+                owner: self.owner.key().clone(),
+                max_allowed_options: params.max_allowed_options.clone(),
+                max_allowed_items: params.max_allowed_items.clone(),
+                allowed_mint_accounts: params.allowed_mint_accounts.clone(),
+            }
+        );
 
         Ok(())
     }
