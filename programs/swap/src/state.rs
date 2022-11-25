@@ -116,11 +116,17 @@ pub enum SwapProposalStatus {
     Created,
 
     // Declare that the proposal is finalized
-    Finalized
+    Fulfilled,
+
+    // Declare that the proposal is canceled
+    Canceled
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
 pub struct SwapOption {
+    // Swap option id
+    pub id: String,
+
     // asking item included in swap option
     pub asking_items: Vec<SwapItem>
 }
@@ -138,6 +144,9 @@ pub struct SwapProposal {
     // Define the buyer that fulfil this proposal
     pub fulfilled_by: Pubkey,
 
+    // Define the option has been fulfilled for this proposal.
+    pub fulfilled_with_option_id: String,
+
     // Swap items that have been offered.
     pub offered_items: Vec<SwapItem>,
 
@@ -149,4 +158,5 @@ pub struct SwapProposal {
 
     // Define the proposal status
     pub status: SwapProposalStatus,
+
 }

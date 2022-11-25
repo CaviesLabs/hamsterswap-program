@@ -21,6 +21,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod swap {
     use super::*;
 
+    // Initialize contract once
     pub fn initialize(ctx: Context<InitializeSwapPlatformContext>, params: InitializeSwapPlatformParams) -> Result<()> {
         // process
         ctx.accounts.execute(
@@ -28,12 +29,16 @@ pub mod swap {
             *ctx.bumps.get("swap_config").unwrap(),
         ).unwrap();
 
+        // Program result should be ok.
         Ok(())
     }
 
+    // Deployer can update swap config later
     pub fn update_swap_config(ctx: Context<UpdateSwapPlatformContext>, params: UpdateSwapPlatformParams) -> Result<()> {
+        // execute with context
         ctx.accounts.execute(params).unwrap();
 
+        // Program result should be ok.
         Ok(())
     }
 }
