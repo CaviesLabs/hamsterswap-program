@@ -19,5 +19,7 @@ pub enum SwapError {
     #[msg("Invalid Offer")]
     InvalidOffer,
     #[msg("Invalid value")]
-    InvalidValue
+    InvalidValue,
+    #[msg("Invalid value")]
+    UnAllowedMintToken
 }

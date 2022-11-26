@@ -16,7 +16,6 @@ describe("initialize_swap_program", async () => {
   // find the swap account
   const [swapAccount] = await PublicKey.findProgramAddress([
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
-    deployer.publicKey.toBuffer()
   ], program.programId);
 
   it("[initialize_swap_program] should: deployer should initialize successfully", async () => {
@@ -24,21 +23,19 @@ describe("initialize_swap_program", async () => {
     await program.methods.initialize({
       maxAllowedItems: new BN(5).toNumber(),
       maxAllowedOptions: new BN(5).toNumber(),
-      allowedMintAccounts: [deployer.publicKey]
     }).accounts({
-      swapConfig: swapAccount,
+      swapRegistry: swapAccount,
       owner: deployer.publicKey
     }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 
-    const state = await program.account.swapPlatformConfig.fetch(swapAccount);
+    const state = await program.account.swapPlatformRegistry.fetch(swapAccount);
 
     // Expect conditions
     expect(state.owner.equals(deployer.publicKey));
     expect(state.wasInitialized).equals(true);
     expect(state.maxAllowedItems).equals(5);
     expect(state.maxAllowedOptions).equals(5);
-    expect(state.allowedMintAccounts.length).equals(1);
-    expect(state.allowedMintAccounts.map(elm => elm.toString()).includes(deployer.publicKey.toString())).equals(true);
+    expect(state.allowedMintAccounts.length).equals(0);
   });
 
   it("[initialize_swap_program] should: cannot re-initialize", async () => {
@@ -46,9 +43,8 @@ describe("initialize_swap_program", async () => {
       await program.methods.initialize({
         maxAllowedItems: new BN(6).toNumber(),
         maxAllowedOptions: new BN(5).toNumber(),
-        allowedMintAccounts: [deployer.publicKey]
       }).accounts({
-        swapConfig: swapAccount,
+        swapRegistry: swapAccount,
         owner: deployer.publicKey
       }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 

@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::{system_program};
+use anchor_lang::solana_program::{system_program, sysvar};
 
 use anchor_spl::token::*;
+
+use arrayref::array_ref;
 
 pub mod action;
 pub mod error;
@@ -19,6 +21,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod swap {
+    use std::borrow::Borrow;
     use super::*;
 
     // Initialize contract once
@@ -26,7 +29,7 @@ pub mod swap {
         // process
         ctx.accounts.execute(
             params,
-            *ctx.bumps.get("swap_config").unwrap(),
+            *ctx.bumps.get("swap_registry").unwrap(),
         ).unwrap();
 
         // Program result should be ok.
@@ -34,11 +37,27 @@ pub mod swap {
     }
 
     // Deployer can update swap config later
-    pub fn update_swap_config(ctx: Context<UpdateSwapPlatformContext>, params: UpdateSwapPlatformParams) -> Result<()> {
+    pub fn update_swap_registry(ctx: Context<UpdateSwapPlatformContext>, params: UpdateSwapPlatformParams) -> Result<()> {
         // execute with context
         ctx.accounts.execute(params).unwrap();
 
         // Program result should be ok.
+        Ok(())
+    }
+
+    // Create proposal, public to anyone
+    pub fn create_proposal(ctx: Context<CreateProposalContext>, params: CreateProposalParams) -> Result<()> {
+        let id = random_number(
+            ctx.accounts.recent_slothashes.borrow(),
+            params.id.to_string()
+        );
+
+        ctx.accounts.execute(
+            params,
+            id.to_string(),
+            *ctx.bumps.get("swap_proposal").unwrap(),
+        ).unwrap();
+
         Ok(())
     }
 }

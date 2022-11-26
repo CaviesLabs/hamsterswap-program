@@ -8,9 +8,6 @@ pub struct InitializeSwapPlatformParams {
 
     // define max allowed options can be asked.
     pub max_allowed_options: u8,
-
-    // define whitelisted mint token account
-    pub allowed_mint_accounts: Vec<Pubkey>,
 }
 
 // Define the context, passed in parameters when trigger from deployer.
@@ -22,12 +19,12 @@ pub struct InitializeSwapPlatformContext<'info> {
 
     #[account(
         init,
-        seeds = [PLATFORM_SEED, PROGRAM_ID],
+        seeds = [PLATFORM_SEED],
         payer = owner,
         space = 10240,
         bump
     )]
-    pub swap_config: Account<'info, SwapPlatformConfig>,
+    pub swap_registry: Account<'info, SwapPlatformRegistry>,
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -37,15 +34,14 @@ pub struct InitializeSwapPlatformContext<'info> {
 impl<'info> InitializeSwapPlatformContext<'info> {
     pub fn execute(&mut self, params: InitializeSwapPlatformParams, bump: u8) -> Result<()> {
         // Handle post initialization
-        self.swap_config.handle_post_initialized().unwrap();
+        self.swap_registry.handle_post_initialized().unwrap();
 
         // Assigning values
-        let swap_config = &mut self.swap_config;
-        swap_config.bump = bump;
-        swap_config.owner = *self.owner.key;
-        swap_config.allowed_mint_accounts = params.allowed_mint_accounts;
-        swap_config.max_allowed_items = params.max_allowed_items;
-        swap_config.max_allowed_options = params.max_allowed_options;
+        let swap_registry = &mut self.swap_registry;
+        swap_registry.bump = bump;
+        swap_registry.owner = *self.owner.key;
+        swap_registry.max_allowed_items = params.max_allowed_items;
+        swap_registry.max_allowed_options = params.max_allowed_options;
 
         Ok(())
     }

@@ -4,7 +4,7 @@ use crate::*;
 // Here we define the account state that holds the administration info.
 #[account]
 #[derive(Default)]
-pub struct SwapPlatformConfig {
+pub struct SwapPlatformRegistry {
     // Define owner
     pub owner: Pubkey,
 
@@ -25,7 +25,7 @@ pub struct SwapPlatformConfig {
 }
 
 // Define handler
-impl SwapPlatformConfig {
+impl SwapPlatformRegistry {
     pub fn handle_post_initialized(&mut self) -> Result<()> {
         if self.was_initialized == false {
             self.was_initialized = true;
@@ -135,6 +135,9 @@ pub struct SwapOption {
 #[account]
 #[derive(Default)]
 pub struct SwapProposal {
+    // Id of the proposal
+    pub id: String,
+
     // Bump to help define the PDA of swap order.
     pub bump: u8,
 
@@ -165,6 +168,7 @@ impl SwapProposal {
     // Define default value
     fn default() -> SwapProposal {
         SwapProposal {
+            id: "".to_string(),
             bump: 0,
             owner: Pubkey::default(),
             fulfilled_by: Pubkey::default(),
@@ -174,30 +178,5 @@ impl SwapProposal {
             swap_options: vec![],
             expired_at: 0,
         }
-    }
-
-    // validate input
-    pub fn handle_post_initialized(&mut self) -> Result<()> {
-        if self.bump == 0 {
-            return Err(SwapError::InvalidValue.into());
-        }
-
-        if self.owner == Pubkey::default() {
-            return Err(SwapError::InvalidValue.into());
-        }
-
-        if self.offered_items.len() < 1 {
-            return Err(SwapError::InvalidValue.into());
-        }
-
-        if self.swap_options.len() < 1 {
-            return Err(SwapError::InvalidValue.into());
-        }
-
-        if self.expired_at < Clock::get().unwrap().unix_timestamp as u64 {
-            return Err(SwapError::InvalidValue.into());
-        }
-
-        return Ok(());
     }
 }

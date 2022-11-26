@@ -18,29 +18,26 @@ describe("update_swap_program", async () => {
   // find the swap account
   const [swapAccount] = await PublicKey.findProgramAddress([
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
-    deployer.publicKey.toBuffer()
   ], program.programId);
 
   it("[update_swap_program] should: deployer update config successfully", async () => {
     // Initialize first
-    const tx = await program.methods.updateSwapConfig({
+    const tx = await program.methods.updateSwapRegistry({
       maxAllowedItems: new BN(3).toNumber(),
       maxAllowedOptions: new BN(3).toNumber(),
-      allowedMintAccounts: [sampleMintToken.publicKey]
     }).accounts({
-      swapConfig: swapAccount,
+      swapRegistry: swapAccount,
       owner: deployer.publicKey
     }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 
-    const state = await program.account.swapPlatformConfig.fetch(swapAccount);
+    const state = await program.account.swapPlatformRegistry.fetch(swapAccount);
 
     // Expect conditions
     expect(state.owner.equals(deployer.publicKey));
     expect(state.wasInitialized).equals(true);
     expect(state.maxAllowedItems).equals(3);
     expect(state.maxAllowedOptions).equals(3);
-    expect(state.allowedMintAccounts.length).equals(1);
-    expect(state.allowedMintAccounts.map(elm => elm.toString()).includes(sampleMintToken.publicKey.toString())).equals(true);
+    expect(state.allowedMintAccounts.length).equals(0);
 
     // expect eventLog
     const transaction = await provider.connection.getParsedTransaction(tx, { commitment: "confirmed" });
@@ -51,18 +48,16 @@ describe("update_swap_program", async () => {
     expect(event.data.owner.toString() === deployer.publicKey.toString()).equals(true);
     expect(event.data.maxAllowedOptions === 3).equals(true);
     expect(event.data.maxAllowedItems === 3).equals(true);
-    expect((event.data.allowedMintAccounts as PublicKey[]).map(elm => elm.toString()).includes(sampleMintToken.publicKey.toString())).equals(true);
   });
 
 
   it("[update_swap_program] should: non-owner cannot modify the swap program", async () => {
     try {
-      await program.methods.updateSwapConfig({
+      await program.methods.updateSwapRegistry({
         maxAllowedItems: new BN(6).toNumber(),
         maxAllowedOptions: new BN(5).toNumber(),
-        allowedMintAccounts: [sampleMintToken.publicKey]
       }).accounts({
-        swapConfig: swapAccount,
+        swapRegistry: swapAccount,
         owner: otherUser.publicKey
       }).signers([otherUser]).rpc({ commitment: "confirmed" });
 
@@ -74,12 +69,11 @@ describe("update_swap_program", async () => {
 
   it("[update_swap_program] should: cannot update invalid values", async () => {
     try {
-      await program.methods.updateSwapConfig({
+      await program.methods.updateSwapRegistry({
         maxAllowedItems: new BN(0).toNumber(),
         maxAllowedOptions: new BN(5).toNumber(),
-        allowedMintAccounts: []
       }).accounts({
-        swapConfig: swapAccount,
+        swapRegistry: swapAccount,
         owner: deployer.publicKey
       }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 

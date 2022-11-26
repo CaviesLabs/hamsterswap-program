@@ -15,14 +15,8 @@ macro_rules! swap_emit {
 pub struct SwapConfigUpdated {
     #[index]
     pub owner: Pubkey,
-
     pub max_allowed_items: u8,
-
-    // define max allowed options can be asked.
     pub max_allowed_options: u8,
-
-    // define whitelisted mint token account
-    pub allowed_mint_accounts: Vec<Pubkey>,
 }
 
 /// Emitted when a [JoinEvent] is created.
@@ -30,8 +24,6 @@ pub struct SwapConfigUpdated {
 pub struct ProposalCreated {
     #[index]
     pub owner: Pubkey,
-
     pub proposal: Pubkey,
-
     pub expired_at: i64,
 }
