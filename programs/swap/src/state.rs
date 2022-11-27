@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use anchor_spl::token::accessor::mint;
 use crate::*;
 
@@ -63,6 +64,14 @@ impl SwapPlatformRegistry {
                     && mint_info.is_enabled == true
             )
             .count() >= 1;
+    }
+
+    // Get mint info
+    pub fn get_mint_info(&self, mint_account: Pubkey) -> &MintInfo {
+        return self.allowed_mint_accounts.iter()
+            .find(|&mint_account_key| mint_account_key.mint_account == mint_account.key().clone())
+            .unwrap()
+            .borrow();
     }
 }
 

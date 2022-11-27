@@ -62,16 +62,8 @@ impl<'info> CreateProposalContext<'info> {
         // Now to validate data state
         self.handle_post_initialized().unwrap();
 
-        // now we need to transfer appropriate assets.
-        self.transfer_asset_to_vault().unwrap();
-
         // ok
         Ok(())
-    }
-
-    // TODO: implement this
-    fn transfer_asset_to_vault(&mut self) -> Result<()> {
-        return Ok(());
     }
 
     // validate mint accounts
