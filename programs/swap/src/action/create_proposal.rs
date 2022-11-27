@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use crate::*;
 
 // Define params
@@ -84,7 +85,7 @@ impl<'info> CreateProposalContext<'info> {
         let iterator = params.iter();
 
         for item in iterator {
-            if !self.swap_registry.allowed_mint_accounts.contains(&item.mint_account) {
+            if !self.swap_registry.is_mint_account_enabled(item.mint_account) {
                 return Err(SwapError::UnAllowedMintToken.into());
             }
         }

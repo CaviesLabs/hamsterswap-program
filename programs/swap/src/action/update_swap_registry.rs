@@ -14,7 +14,10 @@ pub struct UpdateSwapPlatformParams {
 #[derive(Accounts)]
 pub struct UpdateSwapPlatformContext<'info> {
     // We define the fee payer
-    #[account(mut)]
+    #[account(
+        mut,
+        address = swap_registry.owner @ SwapError::OnlyAdministrator
+    )]
     pub owner: Signer<'info>,
 
     #[account(

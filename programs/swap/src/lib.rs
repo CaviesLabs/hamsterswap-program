@@ -60,4 +60,13 @@ pub mod swap {
 
         Ok(())
     }
+
+    // Create proposal, public to anyone
+    pub fn create_token_vault(ctx: Context<CreateTokenVaultContext>) -> Result<()> {
+        ctx.accounts.execute(
+            *ctx.bumps.get("swap_token_vault").unwrap(),
+        ).unwrap();
+
+        Ok(())
+    }
 }

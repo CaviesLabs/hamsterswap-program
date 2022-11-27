@@ -13,14 +13,13 @@ describe("update_swap_program", async () => {
   const program = anchor.workspace.Swap as Program<Swap>;
   const deployer = provider.wallet as anchor.Wallet;
   const otherUser = Keypair.generate();
-  const sampleMintToken = Keypair.generate();
 
   // find the swap account
   const [swapAccount] = await PublicKey.findProgramAddress([
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
   ], program.programId);
 
-  it("[update_swap_program] should: deployer update config successfully", async () => {
+  it("[update_swap_program] should: deployer updates registry successfully", async () => {
     // Initialize first
     const tx = await program.methods.updateSwapRegistry({
       maxAllowedItems: new BN(3).toNumber(),
@@ -37,6 +36,7 @@ describe("update_swap_program", async () => {
     expect(state.wasInitialized).equals(true);
     expect(state.maxAllowedItems).equals(3);
     expect(state.maxAllowedOptions).equals(3);
+    // @ts-ignore
     expect(state.allowedMintAccounts.length).equals(0);
 
     // expect eventLog
@@ -51,7 +51,7 @@ describe("update_swap_program", async () => {
   });
 
 
-  it("[update_swap_program] should: non-owner cannot modify the swap program", async () => {
+  it("[update_swap_program] should: non-owner fails to modify the swap program", async () => {
     try {
       await program.methods.updateSwapRegistry({
         maxAllowedItems: new BN(6).toNumber(),
@@ -67,7 +67,7 @@ describe("update_swap_program", async () => {
     }
   });
 
-  it("[update_swap_program] should: cannot update invalid values", async () => {
+  it("[update_swap_program] should: deployer fails to update invalid values", async () => {
     try {
       await program.methods.updateSwapRegistry({
         maxAllowedItems: new BN(0).toNumber(),

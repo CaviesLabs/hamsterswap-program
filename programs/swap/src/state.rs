@@ -1,7 +1,17 @@
+use anchor_spl::token::accessor::mint;
 use crate::*;
 
 // ================ Swap Platform Config ================ //
 // Here we define the account state that holds the administration info.
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, PartialEq)]
+pub struct MintInfo {
+    // Whether the mint token is active or not.
+    pub is_enabled: bool,
+    pub mint_account: Pubkey,
+    pub token_account: Pubkey,
+    pub bump: u8
+}
+
 #[account]
 #[derive(Default)]
 pub struct SwapPlatformRegistry {
@@ -21,11 +31,12 @@ pub struct SwapPlatformRegistry {
     pub max_allowed_options: u8,
 
     // define whitelisted mint token account
-    pub allowed_mint_accounts: Vec<Pubkey>,
+    pub allowed_mint_accounts: Vec<MintInfo>,
 }
 
 // Define handler
 impl SwapPlatformRegistry {
+    // handle data integrity after initialization
     pub fn handle_post_initialized(&mut self) -> Result<()> {
         if self.was_initialized == false {
             self.was_initialized = true;
@@ -34,6 +45,24 @@ impl SwapPlatformRegistry {
 
         msg!("ERROR::PLATFORM::ALREADY_INITIALIZED");
         return Err(SwapError::AlreadyInitialized.into());
+    }
+
+    // Check whether the mint account was previously added or not.
+    pub fn is_mint_account_existed(&self, mint_account: Pubkey) -> bool {
+        return self.allowed_mint_accounts.iter()
+            .map(|allowed_mint_account| allowed_mint_account.mint_account)
+            .filter(|&mint_account_key| mint_account_key == mint_account.key().clone())
+            .count() >= 1;
+    }
+
+    // Check whether the mint account was enabled or not
+    pub fn is_mint_account_enabled(&self, mint_account: Pubkey) -> bool {
+        return self.allowed_mint_accounts.iter()
+            .filter(|&mint_info|
+                    mint_info.mint_account == mint_account.key().clone()
+                    && mint_info.is_enabled == true
+            )
+            .count() >= 1;
     }
 }
 
@@ -71,9 +100,6 @@ pub struct SwapItem {
     // Define the mint account
     pub mint_account: Pubkey,
 
-    // Define the associated account of order so that user can deposit to this address.
-    pub proposal_token_account: Pubkey,
-
     // Define the amount of deposited token
     pub amount: u64,
 
@@ -92,7 +118,6 @@ impl SwapItem {
             owner: Pubkey::default(),
             item_type: SwapItemType::OnChain,
             mint_account: Pubkey::default(),
-            proposal_token_account: Pubkey::default(),
             status: SwapItemStatus::Created,
             amount: 0,
         }

@@ -2,7 +2,10 @@ use crate::*;
 
 #[derive(Accounts)]
 pub struct CreateTokenVaultContext<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        address = swap_registry.owner @ SwapError::OnlyAdministrator
+    )]
     pub owner: Signer<'info>,
 
     #[account(
@@ -22,7 +25,7 @@ pub struct CreateTokenVaultContext<'info> {
         payer = owner,
         bump
     )]
-    pub swap_token_vault_account: Account<'info, TokenAccount>,
+    pub swap_token_vault: Account<'info, TokenAccount>,
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
@@ -36,6 +39,21 @@ pub struct CreateTokenVaultContext<'info> {
 
 impl<'info> CreateTokenVaultContext<'info> {
     pub fn execute(&mut self, bump: u8) -> Result<()> {
+        // Avoid adding duplicated value
+        if self.swap_registry.is_mint_account_existed(self.mint_token_account.key().clone()) {
+            return Err(SwapError::MintAccountExisted.into());
+        }
+
+        // Now we push into the allowed mint tokens array.
+        self.swap_registry.allowed_mint_accounts.push(
+            MintInfo {
+                mint_account: self.mint_token_account.key().clone(),
+                token_account: self.swap_token_vault.key(),
+                bump,
+                is_enabled: true
+            }
+        );
+
         Ok(())
     }
 }

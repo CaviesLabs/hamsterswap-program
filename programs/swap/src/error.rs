@@ -5,9 +5,11 @@ pub enum SwapError {
     // System error
     #[msg("The program was already initialized")]
     AlreadyInitialized,
+    #[msg("The mint account was existed")]
+    MintAccountExisted,
     // Business errors
     #[msg("Only Platform Admin")]
-    OnlyAdmin,
+    OnlyAdministrator,
     #[msg("Only Owner")]
     OnlyOwner,
     #[msg("Only Buyer")]

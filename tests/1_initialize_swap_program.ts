@@ -18,7 +18,7 @@ describe("initialize_swap_program", async () => {
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
   ], program.programId);
 
-  it("[initialize_swap_program] should: deployer should initialize successfully", async () => {
+  it("[initialize_swap_program] should: deployer initializes swap registry successfully", async () => {
     // Initialize first
     await program.methods.initialize({
       maxAllowedItems: new BN(5).toNumber(),
@@ -35,10 +35,12 @@ describe("initialize_swap_program", async () => {
     expect(state.wasInitialized).equals(true);
     expect(state.maxAllowedItems).equals(5);
     expect(state.maxAllowedOptions).equals(5);
+
+    // @ts-ignore
     expect(state.allowedMintAccounts.length).equals(0);
   });
 
-  it("[initialize_swap_program] should: cannot re-initialize", async () => {
+  it("[initialize_swap_program] should: deployer fails to re-initialize the swap registry", async () => {
     try {
       await program.methods.initialize({
         maxAllowedItems: new BN(6).toNumber(),
