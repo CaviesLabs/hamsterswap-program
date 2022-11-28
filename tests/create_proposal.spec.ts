@@ -112,12 +112,14 @@ describe("create_proposal", async () => {
     // Construct data to be sent over the RPC.
     const expiredAt= new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
     const offeredItems = [{
+      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       mintAccount: mintNormalPublicKey,
       amount: new BN(1)
     }];
     const swapOptions = [{
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       askingItems: [{
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
         amount: new BN(4)
       }]

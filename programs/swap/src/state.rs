@@ -101,8 +101,11 @@ pub enum SwapItemStatus {
     Redeemed,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct SwapItem {
+    // Define id of the swap item.
+    pub id: String,
+
     // Define the mint account
     pub mint_account: Pubkey,
 
@@ -121,6 +124,7 @@ impl SwapItem {
     // Define default value
     fn default() -> SwapItem {
         SwapItem {
+            id: String::default(),
             mint_account: Pubkey::default(),
             item_type: SwapItemType::OnChain,
             status: SwapItemStatus::Created,

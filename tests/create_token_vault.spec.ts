@@ -4,7 +4,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
-import { createMint } from "@solana/spl-token";
+import { createMint, getAssociatedTokenAddress } from "@solana/spl-token";
 
 describe("create_token_vault", async () => {
   // Configure the client to use the local cluster.

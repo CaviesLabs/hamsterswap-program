@@ -2,8 +2,9 @@ use crate::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct SwapItemInfo {
-    mint_account: Pubkey,
-    amount: u64
+    pub id: String,
+    pub mint_account: Pubkey,
+    pub amount: u64
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
@@ -66,11 +67,12 @@ impl<'info> CreateProposalContext<'info> {
             let mut swap_option = SwapOption::default();
 
             swap_option.id = option.id;
-            swap_option.asking_items =  option.asking_items.iter()
+            swap_option.asking_items =  option.asking_items.into_iter()
                 .map(|item| {
                     let mut swap_item = SwapItem::default();
                     swap_item.amount = item.amount;
                     swap_item.mint_account = item.mint_account;
+                    swap_item.id = item.id;
 
                     return swap_item;
                 }).collect();

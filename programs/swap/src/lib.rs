@@ -2,7 +2,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{system_program, sysvar};
 
 use anchor_spl::token::*;
-
 use arrayref::array_ref;
 
 pub mod action;
