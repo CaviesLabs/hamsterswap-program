@@ -1,10 +1,10 @@
 import * as anchor from "@project-serum/anchor";
-import { BN, Program } from "@project-serum/anchor";
+import { Program } from "@project-serum/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
-import { createMint, getAssociatedTokenAddress } from "@solana/spl-token";
+import { createMint } from "@solana/spl-token";
 
 describe("create_token_vault", async () => {
   // Configure the client to use the local cluster.
@@ -32,6 +32,7 @@ describe("create_token_vault", async () => {
       deployer.publicKey, // freeze authority (you can use `null` to disable it. when you disable it, you can't turn it on again)
       8 // decimals
     );
+
     [swapTokenVault] = await PublicKey.findProgramAddress([
       anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
       mintNormalPublicKey.toBytes()
