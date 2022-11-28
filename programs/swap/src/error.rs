@@ -23,5 +23,8 @@ pub enum SwapError {
     #[msg("Invalid value")]
     InvalidValue,
     #[msg("Invalid value")]
-    UnAllowedMintToken
+    UnAllowedMintToken,
+    #[msg("Proposal cannot be canceled")]
+    ProposalCannotBeCanceled,
+
 }

@@ -22,6 +22,9 @@ describe("create_proposal", async () => {
   let mintNormalPublicKey;
   let swapTokenVault;
   let proposalOwner;
+  let proposalId;
+  let swapProposal;
+  let participant;
 
   before(async () => {
     // now we try to create token vault for the mint token
@@ -39,6 +42,7 @@ describe("create_proposal", async () => {
 
     // Construct accounts for proposal creation
     proposalOwner = Keypair.generate();
+    participant = Keypair.generate();
 
     // funding proposal owner
     const airdropSignature = await provider.connection.requestAirdrop(proposalOwner.publicKey, web3.LAMPORTS_PER_SOL);
@@ -47,6 +51,13 @@ describe("create_proposal", async () => {
       blockhash: (await provider.connection.getLatestBlockhash()).blockhash,
       lastValidBlockHeight: ((await provider.connection.getLatestBlockhash())).lastValidBlockHeight
     });
+
+    // Now to create the proposal
+    proposalId = Keypair.generate().publicKey.toBase58().slice(0, 10);
+    [swapProposal] = await PublicKey.findProgramAddress([
+      anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
+      anchor.utils.bytes.utf8.encode(proposalId)
+    ], program.programId);
   });
 
   it("[create_proposal] should: fail to create proposal with un-allowed mint tokens", async () => {
@@ -92,18 +103,11 @@ describe("create_proposal", async () => {
   it("[create_proposal] should: everyone can create publicly a proposal", async () => {
     // now we whitelist the token first
     await program.methods.createTokenVault().accounts({
-      mintTokenAccount: mintNormalPublicKey,
+      mintAccount: mintNormalPublicKey,
       swapRegistry,
       swapTokenVault,
       owner: deployer.publicKey
     }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
-
-    // Now to create the proposal
-    const id = Keypair.generate().publicKey.toBase58().slice(0, 10);
-    const [swapProposal] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
-      anchor.utils.bytes.utf8.encode(id)
-    ], program.programId);
 
     // Construct data to be sent over the RPC.
     const expiredAt= new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
@@ -121,7 +125,7 @@ describe("create_proposal", async () => {
 
     // Send RPC request to blockchain.
     const tx = await program.methods.createProposal({
-      id,
+      id: proposalId,
       swapOptions,
       offeredItems,
       expiredAt
@@ -133,7 +137,7 @@ describe("create_proposal", async () => {
 
     // now we verify the state
     const state = await program.account.swapProposal.fetch(swapProposal);
-    expect(state.id).eq(id);
+    expect(state.id).eq(proposalId);
     expect(state.expiredAt.eq(new BN(expiredAt))).to.be.true;
     expect(!!state.bump).to.be.true;
     expect(state.owner.equals(proposalOwner.publicKey)).to.be.true;
@@ -160,8 +164,16 @@ describe("create_proposal", async () => {
     // Expect emitted logs
     expect(event.data.owner.toString() === proposalOwner.publicKey.toString()).equals(true);
     expect(event.data.proposalKey.toString() === swapProposal.toString()).equals(true);
-    expect(event.data.id).equals(id);
+    expect(event.data.id).equals(proposalId);
     // @ts-ignore
     expect(event.data.expiredAt.eq(new BN(expiredAt))).to.be.true;
   });
+
+  it('[cancel_proposal] should: participants can cancel proposal anytime when proposal isn\'t fulfilled', async () => {
+      const response = await program.methods.cancelProposal({ id: proposalId }).accounts({
+        swapProposal,
+        signer: proposalOwner.publicKey
+      }).signers([proposalOwner]).rpc({commitment: 'confirmed'});
+      expect(!!response).to.be.true;
+  })
 });

@@ -42,7 +42,7 @@ describe("create_token_vault", async () => {
     try {
       // create the token vault
       await program.methods.createTokenVault().accounts({
-        mintTokenAccount: mintNormalPublicKey,
+        mintAccount: mintNormalPublicKey,
         swapRegistry,
         swapTokenVault,
         owner: otherUser.publicKey
@@ -57,7 +57,7 @@ describe("create_token_vault", async () => {
   it("[create_token_vault] should: deployer creates a token vault successfully", async () => {
     // create the token vault
     await program.methods.createTokenVault().accounts({
-      mintTokenAccount: mintNormalPublicKey,
+      mintAccount: mintNormalPublicKey,
       swapRegistry,
       swapTokenVault,
       owner: deployer.publicKey
@@ -76,7 +76,7 @@ describe("create_token_vault", async () => {
     try {
       // create the token vault
       await program.methods.createTokenVault().accounts({
-        mintTokenAccount: mintNormalPublicKey,
+        mintAccount: mintNormalPublicKey,
         swapRegistry,
         swapTokenVault,
         owner: deployer.publicKey

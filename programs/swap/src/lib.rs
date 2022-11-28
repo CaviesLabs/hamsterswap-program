@@ -46,6 +46,15 @@ pub mod swap {
     }
 
     // Create proposal, public to anyone
+    pub fn create_token_vault(ctx: Context<CreateTokenVaultContext>) -> Result<()> {
+        ctx.accounts.execute(
+            *ctx.bumps.get("swap_token_vault").unwrap(),
+        ).unwrap();
+
+        Ok(())
+    }
+
+    // Create proposal, public to anyone
     pub fn create_proposal(ctx: Context<CreateProposalContext>, params: CreateProposalParams) -> Result<()> {
         ctx.accounts.execute(
             params,
@@ -56,11 +65,9 @@ pub mod swap {
     }
 
     // Create proposal, public to anyone
-    pub fn create_token_vault(ctx: Context<CreateTokenVaultContext>) -> Result<()> {
-        ctx.accounts.execute(
-            *ctx.bumps.get("swap_token_vault").unwrap(),
-        ).unwrap();
-
+    pub fn cancel_proposal(ctx: Context<CancelProposalContext>, params: CancelProposalParams) -> Result<()> {
+        ctx.accounts.execute(params).unwrap();
         Ok(())
     }
+
 }

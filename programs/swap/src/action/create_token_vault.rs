@@ -16,12 +16,12 @@ pub struct CreateTokenVaultContext<'info> {
     )]
     pub swap_registry: Account<'info, SwapPlatformRegistry>,
 
-    pub mint_token_account: Account<'info, Mint>,
+    pub mint_account: Account<'info, Mint>,
 
     #[account(init,
-        token::mint = mint_token_account,
+        token::mint = mint_account,
         token::authority = swap_registry,
-        seeds = [TOKEN_ACCOUNT_SEED, mint_token_account.key().as_ref()],
+        seeds = [TOKEN_ACCOUNT_SEED, mint_account.key().as_ref()],
         payer = owner,
         bump
     )]
@@ -40,14 +40,14 @@ pub struct CreateTokenVaultContext<'info> {
 impl<'info> CreateTokenVaultContext<'info> {
     pub fn execute(&mut self, bump: u8) -> Result<()> {
         // Avoid adding duplicated value
-        if self.swap_registry.is_mint_account_existed(self.mint_token_account.key().clone()) {
+        if self.swap_registry.is_mint_account_existed(self.mint_account.key().clone()) {
             return Err(SwapError::MintAccountExisted.into());
         }
 
         // Now we push into the allowed mint tokens array.
         self.swap_registry.allowed_mint_accounts.push(
             MintInfo {
-                mint_account: self.mint_token_account.key().clone(),
+                mint_account: self.mint_account.key().clone(),
                 token_account: self.swap_token_vault.key(),
                 bump,
                 is_enabled: true

@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use crate::*;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
@@ -166,7 +165,7 @@ impl<'info> CreateProposalContext<'info> {
             return Err(SwapError::InvalidValue.into());
         }
 
-        if self.swap_proposal.expired_at < Clock::get().unwrap().unix_timestamp as u64 {
+        if self.swap_proposal.expired_at <= Clock::get().unwrap().unix_timestamp as u64 {
             return Err(SwapError::InvalidValue.into());
         }
 

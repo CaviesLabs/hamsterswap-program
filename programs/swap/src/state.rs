@@ -199,17 +199,43 @@ pub struct SwapProposal {
 // Implement some domain logic
 impl SwapProposal {
     // Define default value
-    fn default() -> SwapProposal {
+    pub fn default() -> SwapProposal {
         SwapProposal {
-            id: "".to_string(),
             bump: 0,
+            id: String::default(),
             owner: Pubkey::default(),
             fulfilled_by: Pubkey::default(),
-            fulfilled_with_option_id: "".to_string(),
+            fulfilled_with_option_id: String::default(),
             status: SwapProposalStatus::Created,
             offered_items: vec![],
             swap_options: vec![],
             expired_at: 0,
         }
+    }
+
+    // Define the state that the proposal is still open for participants.
+    pub fn is_proposal_open_for_participants(&self) -> bool {
+        return self.expired_at > Clock::get().unwrap().unix_timestamp as u64
+            && self.status == SwapProposalStatus::Deposited // need to be updated once depositing occurs
+            && self.fulfilled_by != Pubkey::default() // need to be updated once depositing occurs
+            && self.fulfilled_with_option_id != String::default(); // need to be updated once depositing occurs
+    }
+
+    // Define the state that the proposal is redeemable (the swap is completed)
+    pub fn is_proposal_redeemable(&self) -> bool {
+        return !self.is_proposal_open_for_participants()
+                && self.status == SwapProposalStatus::Fulfilled; // need to be updated once depositing is completed.
+    }
+
+    // Define the state that the proposal is withdrawable (the swap is canceled).
+    pub fn is_proposal_withdrawable(&self) -> bool {
+        return !self.is_proposal_open_for_participants()
+            && self.status == SwapProposalStatus::Canceled; // need to be updated once the proposal owner cancel the proposal.
+    }
+
+    // Define whether the proposal can be canceled for a pubkey.
+    pub fn is_proposal_cancelable_for(&self, signer: &Pubkey) -> bool {
+        return (!self.is_proposal_redeemable() && !self.is_proposal_withdrawable())
+            && (self.owner.key() == signer.key() || self.fulfilled_by.key() == signer.key());
     }
 }
