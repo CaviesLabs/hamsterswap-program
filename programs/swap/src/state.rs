@@ -1,6 +1,6 @@
+use crate::*;
 use std::borrow::Borrow;
 use anchor_spl::token::accessor::mint;
-use crate::*;
 
 // ================ Swap Platform Config ================ //
 // Here we define the account state that holds the administration info.
@@ -103,9 +103,6 @@ pub enum SwapItemStatus {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Copy, Debug, PartialEq)]
 pub struct SwapItem {
-    // Define the owner item
-    pub owner: Pubkey,
-
     // Define the mint account
     pub mint_account: Pubkey,
 
@@ -124,9 +121,8 @@ impl SwapItem {
     // Define default value
     fn default() -> SwapItem {
         SwapItem {
-            owner: Pubkey::default(),
-            item_type: SwapItemType::OnChain,
             mint_account: Pubkey::default(),
+            item_type: SwapItemType::OnChain,
             status: SwapItemStatus::Created,
             amount: 0,
         }
@@ -148,6 +144,9 @@ pub enum SwapProposalStatus {
     // Declare that the proposal is created
     #[default]
     Created,
+
+    // Declared that the proposal is deposited
+    Deposited,
 
     // Declare that the proposal is finalized
     Fulfilled,

@@ -24,6 +24,7 @@ pub struct SwapConfigUpdated {
 pub struct ProposalCreated {
     #[index]
     pub owner: Pubkey,
-    pub proposal: Pubkey,
+    pub proposal_key: Pubkey,
+    pub id: String,
     pub expired_at: i64,
 }

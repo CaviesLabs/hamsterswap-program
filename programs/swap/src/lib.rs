@@ -47,14 +47,8 @@ pub mod swap {
 
     // Create proposal, public to anyone
     pub fn create_proposal(ctx: Context<CreateProposalContext>, params: CreateProposalParams) -> Result<()> {
-        let id = random_number(
-            ctx.accounts.recent_slothashes.borrow(),
-            params.id.to_string()
-        );
-
         ctx.accounts.execute(
             params,
-            id.to_string(),
             *ctx.bumps.get("swap_proposal").unwrap(),
         ).unwrap();
 

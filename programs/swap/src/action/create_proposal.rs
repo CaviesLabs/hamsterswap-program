@@ -1,6 +1,18 @@
 use std::borrow::Borrow;
 use crate::*;
 
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+pub struct SwapItemInfo {
+    mint_account: Pubkey,
+    amount: u64
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
+pub struct SwapItemOptionInfo {
+    id: String,
+    asking_items: Vec<SwapItemInfo>,
+}
+
 // Define params
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct CreateProposalParams {
@@ -8,10 +20,10 @@ pub struct CreateProposalParams {
     pub id: String,
 
     // define swap options that has been included
-    pub swap_options: Vec<SwapOption>,
+    pub swap_options: Vec<SwapItemOptionInfo>,
 
     // define offered items that has been included
-    pub offered_items: Vec<SwapItem>,
+    pub offered_items: Vec<SwapItemInfo>,
 
     // define expiry date
     pub expired_at: u64,
@@ -19,7 +31,7 @@ pub struct CreateProposalParams {
 
 // Define the context, passed in parameters when trigger from deployer.
 #[derive(Accounts)]
-#[instruction(params: CreateProposalParams, seed: String)]
+#[instruction(params: CreateProposalParams)]
 pub struct CreateProposalContext<'info> {
     // We define the fee payer
     #[account(mut)]
@@ -27,7 +39,7 @@ pub struct CreateProposalContext<'info> {
 
     #[account(
         init,
-        seeds = [PROPOSAL_SEED, seed.as_bytes().as_ref()],
+        seeds = [PROPOSAL_SEED, params.id.as_bytes().as_ref()],
         payer = proposal_owner,
         space = 10240,
         bump
@@ -42,25 +54,56 @@ pub struct CreateProposalContext<'info> {
 
     #[account(address = system_program::ID)]
     pub system_program: Program<'info, System>,
-
-    #[account(address = sysvar::slot_hashes::id())]
-    /// CHECK: no need to check since this is system variable and non-mutable
-    pub recent_slothashes: UncheckedAccount<'info>,
 }
 
 impl<'info> CreateProposalContext<'info> {
-    pub fn execute(&mut self, params: CreateProposalParams, id: String, bump: u8) -> Result<()> {
+    pub fn execute(&mut self, params: CreateProposalParams, bump: u8) -> Result<()> {
         // set data
         let swap_proposal = &mut self.swap_proposal;
         swap_proposal.owner = *self.proposal_owner.key;
-        swap_proposal.swap_options = params.swap_options;
-        swap_proposal.offered_items = params.offered_items;
+
+        // Compute asking items
+        swap_proposal.swap_options = params.swap_options.into_iter().map(|option| {
+            let mut swap_option = SwapOption::default();
+
+            swap_option.id = option.id;
+            swap_option.asking_items =  option.asking_items.iter()
+                .map(|item| {
+                    let mut swap_item = SwapItem::default();
+                    swap_item.amount = item.amount;
+                    swap_item.mint_account = item.mint_account;
+
+                    return swap_item;
+                }).collect();
+
+            return swap_option;
+        }).collect();
+
+        // Compute offered items
+        swap_proposal.offered_items = params.offered_items.into_iter().map(|item| {
+            let mut swap_item = SwapItem::default();
+            swap_item.amount = item.amount;
+            swap_item.mint_account = item.mint_account;
+
+            return swap_item;
+        }).collect();
+
+
         swap_proposal.expired_at = params.expired_at;
-        swap_proposal.id = id;
+        swap_proposal.id = params.id;
         swap_proposal.bump = bump;
 
         // Now to validate data state
         self.handle_post_initialized().unwrap();
+
+        swap_emit!(
+          ProposalCreated {
+                id: self.swap_proposal.id.to_string(),
+                proposal_key: self.swap_proposal.key().clone(),
+                expired_at: self.swap_proposal.expired_at as i64,
+                owner: self.swap_proposal.owner.clone()
+            }
+        );
 
         // ok
         Ok(())
