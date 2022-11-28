@@ -175,5 +175,9 @@ describe("create_proposal", async () => {
         signer: proposalOwner.publicKey
       }).signers([proposalOwner]).rpc({commitment: 'confirmed'});
       expect(!!response).to.be.true;
+    const state = await program.account.swapProposal.fetch(swapProposal);
+    expect(state.id).eq(proposalId);
+    // @ts-ignore
+    expect(!!state.status.canceled).to.be.true;
   })
 });
