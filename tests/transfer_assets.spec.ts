@@ -182,7 +182,6 @@ describe("transfer_assets", async () => {
           signer: proposalOwner.publicKey,
           signerTokenAccount: proposalOwnerTokenAccount.address,
           swapProposal,
-          swapRegistry,
           swapTokenVault,
           mintAccount: mintNormalPublicKey
         }).signers([proposalOwner]).instruction();
@@ -247,7 +246,6 @@ describe("transfer_assets", async () => {
           signer: participant.publicKey,
           signerTokenAccount: participantTokenAccount.address,
           swapProposal,
-          swapRegistry,
           swapTokenVault,
           mintAccount: mintNormalPublicKey
         }).signers([participant]).instruction();

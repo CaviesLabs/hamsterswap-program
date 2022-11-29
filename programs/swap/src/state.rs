@@ -224,6 +224,16 @@ impl SwapProposal {
             && self.fulfilled_with_option_id == String::default(); // need to be updated once depositing occurs
     }
 
+    // Check whether the proposal owner is the signer.
+    pub fn is_proposal_owner(&self, signer: Pubkey) -> bool {
+        return self.owner == signer.key().clone();
+    }
+
+    // Check whether the proposal owner is the signer.
+    pub fn is_fulfilled_participant(&self, signer: Pubkey) -> bool {
+        return self.owner == signer.key().clone();
+    }
+
     // Define the state that the proposal is redeemable (the swap is completed)
     pub fn is_proposal_redeemable(&self) -> bool {
         return !self.is_proposal_open_for_participants()

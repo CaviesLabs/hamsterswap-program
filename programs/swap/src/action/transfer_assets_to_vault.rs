@@ -30,12 +30,6 @@ pub struct TransferAssetsToVaultContext<'info> {
     pub signer_token_account: AccountInfo<'info>,
 
     #[account(
-        seeds = [PLATFORM_SEED],
-        bump = swap_registry.bump,
-    )]
-    pub swap_registry: Account<'info, SwapPlatformRegistry>,
-
-    #[account(
         mut,
         seeds = [PROPOSAL_SEED, params.proposal_id.as_bytes().as_ref()],
         bump = swap_proposal.bump,
