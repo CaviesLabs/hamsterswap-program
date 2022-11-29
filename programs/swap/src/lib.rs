@@ -9,12 +9,14 @@ pub mod error;
 pub mod event;
 pub mod state;
 pub mod constants;
+pub mod macros;
 
 pub use action::*;
 pub use constants::*;
 pub use error::*;
 pub use state::*;
 pub use event::*;
+pub use macros::*;
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 

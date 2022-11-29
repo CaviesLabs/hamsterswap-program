@@ -93,11 +93,14 @@ pub enum SwapItemStatus {
     #[default]
     Created,
 
-    // Define the onchain swap item
+    // Define the item was deposited
     Deposited,
 
-    // Define the offchain swap item
+    // Define the item was redeemed
     Redeemed,
+
+    // Define the item was withdrawn
+    Withdrawn
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
