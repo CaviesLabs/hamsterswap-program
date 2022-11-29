@@ -37,7 +37,7 @@ describe("update_swap_program", async () => {
     expect(state.maxAllowedItems).equals(3);
     expect(state.maxAllowedOptions).equals(3);
     // @ts-ignore
-    expect(state.allowedMintAccounts.length).equals(0);
+    expect(state.allowedMintAccounts.length).equals(1);
 
     // expect eventLog
     const transaction = await provider.connection.getParsedTransaction(tx, { commitment: "confirmed" });

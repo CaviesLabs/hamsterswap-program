@@ -221,8 +221,8 @@ impl SwapProposal {
     pub fn is_proposal_open_for_participants(&self) -> bool {
         return self.expired_at > Clock::get().unwrap().unix_timestamp as u64
             && self.status == SwapProposalStatus::Deposited // need to be updated once depositing occurs
-            && self.fulfilled_by != Pubkey::default() // need to be updated once depositing occurs
-            && self.fulfilled_with_option_id != String::default(); // need to be updated once depositing occurs
+            && self.fulfilled_by == Pubkey::default() // need to be updated once depositing occurs
+            && self.fulfilled_with_option_id == String::default(); // need to be updated once depositing occurs
     }
 
     // Define the state that the proposal is redeemable (the swap is completed)
@@ -241,5 +241,23 @@ impl SwapProposal {
     pub fn is_proposal_cancelable_for(&self, signer: &Pubkey) -> bool {
         return (!self.is_proposal_redeemable() && !self.is_proposal_withdrawable())
             && (self.owner.key() == signer.key() || self.fulfilled_by.key() == signer.key());
+    }
+
+    // Define whether the state is open for depositing.
+    pub fn is_proposal_open_for_depositing(&self) -> bool {
+        return self.status == SwapProposalStatus::Created;
+    }
+
+    // Define whether the state is open for depositing.
+    pub fn is_proposal_open_for_fulfilling(&self, option_id: String, participant: Pubkey) -> bool {
+        return self.status == SwapProposalStatus::Deposited
+            && (
+                self.fulfilled_with_option_id == option_id
+                || self.fulfilled_with_option_id == String::default()
+            )
+            && (
+                self.fulfilled_by == participant.key().clone() ||
+                self.fulfilled_by == Pubkey::default().clone()
+            );
     }
 }

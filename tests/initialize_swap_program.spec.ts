@@ -18,16 +18,18 @@ describe("initialize_swap_program", async () => {
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
   ], program.programId);
 
-  it("[initialize_swap_program] should: deployer initializes swap registry successfully", async () => {
-    // Initialize first
-    await program.methods.initialize({
-      maxAllowedItems: new BN(5).toNumber(),
-      maxAllowedOptions: new BN(5).toNumber(),
-    }).accounts({
-      swapRegistry: swapAccount,
-      owner: deployer.publicKey
-    }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+  before(async () => {
+      // Initialize first
+      await program.methods.initialize({
+        maxAllowedItems: new BN(5).toNumber(),
+        maxAllowedOptions: new BN(5).toNumber(),
+      }).accounts({
+        swapRegistry: swapAccount,
+        owner: deployer.publicKey
+      }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+  })
 
+  it("[initialize_swap_program] should: deployer initializes swap registry successfully", async () => {
     const state = await program.account.swapPlatformRegistry.fetch(swapAccount);
 
     // Expect conditions
@@ -37,7 +39,7 @@ describe("initialize_swap_program", async () => {
     expect(state.maxAllowedOptions).equals(5);
 
     // @ts-ignore
-    expect(state.allowedMintAccounts.length).equals(0);
+    expect(state.allowedMintAccounts.length).equals(1);
   });
 
   it("[initialize_swap_program] should: deployer fails to re-initialize the swap registry", async () => {

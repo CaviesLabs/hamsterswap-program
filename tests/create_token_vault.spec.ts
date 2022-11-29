@@ -67,10 +67,10 @@ describe("create_token_vault", async () => {
     // check the state
     const state = await program.account.swapPlatformRegistry.fetch(swapRegistry);
     // @ts-ignore
-    expect(state.allowedMintAccounts.length).equals(1);
-    expect(state.allowedMintAccounts[0].isEnabled).equals(true);
-    expect(state.allowedMintAccounts[0].mintAccount.equals(mintNormalPublicKey)).equals(true);
-    expect(!!state.allowedMintAccounts[0].tokenAccount).to.be.true;
+    expect(state.allowedMintAccounts.length).equals(2);
+    expect(state.allowedMintAccounts[1].isEnabled).equals(true);
+    expect(state.allowedMintAccounts[1].mintAccount.equals(mintNormalPublicKey)).equals(true);
+    expect(!!state.allowedMintAccounts[1].tokenAccount).to.be.true;
   });
 
   it("[create_token_vault] should: deployer fails to create a token vault for an added mint account", async () => {

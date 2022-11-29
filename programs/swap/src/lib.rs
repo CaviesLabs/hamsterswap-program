@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{system_program, sysvar};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-use anchor_spl::token::*;
 use arrayref::array_ref;
 
 pub mod action;
@@ -20,7 +20,6 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod swap {
-    use std::borrow::Borrow;
     use super::*;
 
     // Initialize contract once
@@ -66,6 +65,13 @@ pub mod swap {
     // Create proposal, public to anyone
     pub fn cancel_proposal(ctx: Context<CancelProposalContext>, params: CancelProposalParams) -> Result<()> {
         ctx.accounts.execute(params).unwrap();
+        Ok(())
+    }
+
+    // Deposit or fulfilling the proposal
+    pub fn transfer_assets_to_vault(ctx: Context<TransferAssetsToVaultContext>, params: TransferAssetsToVaultParams) -> Result<()> {
+        ctx.accounts.execute(params).unwrap();
+
         Ok(())
     }
 

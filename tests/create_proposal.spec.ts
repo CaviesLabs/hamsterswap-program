@@ -146,6 +146,7 @@ describe("create_proposal", async () => {
     // expect offered items
     // @ts-ignore
     expect(state.offeredItems.length).eq(1);
+    expect(state.offeredItems[0].id === offeredItems[0].id).to.be.true;
     expect(state.offeredItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
     expect(state.offeredItems[0].amount.eq(new BN(1))).to.be.true;
     expect(!!state.offeredItems[0].status.created).to.be.true;

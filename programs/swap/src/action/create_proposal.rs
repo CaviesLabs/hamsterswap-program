@@ -85,6 +85,7 @@ impl<'info> CreateProposalContext<'info> {
             let mut swap_item = SwapItem::default();
             swap_item.amount = item.amount;
             swap_item.mint_account = item.mint_account;
+            swap_item.id = item.id;
 
             return swap_item;
         }).collect();
