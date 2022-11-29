@@ -5,14 +5,11 @@ import {
   createMint,
   mintTo,
   getOrCreateAssociatedTokenAccount,
-  getAssociatedTokenAddress,
   getAccount
 } from "@solana/spl-token";
 import { expect } from "chai";
-import bs from "bs58";
 
 import { Swap } from "../target/types/swap";
-import * as Buffer from "buffer";
 
 describe("transfer_assets", async () => {
   // Configure the client to use the local cluster.
@@ -154,58 +151,19 @@ describe("transfer_assets", async () => {
         mintAccount: mintNormalPublicKey,
         amount: new BN(web3.LAMPORTS_PER_SOL * 4)
       }]
+    }, {
+      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+      askingItems: [{
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+        mintAccount: mintNormalPublicKey,
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4)
+      },{
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+        mintAccount: mintNormalPublicKey,
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4)
+      }]
     }];
   });
-  //
-  // it("[deposit_assets] should: proposal owner can deposit offered items", async () => {
-  //   expect(Number(proposalOwnerTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
-  //
-  //
-  //   // now we deposit two time in a row
-  //  try {
-  //    await program.methods.createProposal({
-  //      id: proposalId,
-  //      swapOptions,
-  //      offeredItems,
-  //      expiredAt
-  //    }).accounts({
-  //      proposalOwner: proposalOwner.publicKey,
-  //      swapRegistry,
-  //      swapProposal: swapProposal
-  //    }).signers([proposalOwner]).rpc({commitment: 'confirmed'});
-  //
-  //
-  //    const state = await program.account.swapProposal.fetch(swapProposal);
-  //    console.log(state);
-  //    console.log(offeredItems);
-  //
-  //    const depositInstructions = await Promise.all(offeredItems.map((item) => {
-  //      const params = {
-  //        proposalId,
-  //        swapItemId: item.id,
-  //        swapTokenVaultBump,
-  //        actionType: {depositing: {} },
-  //        optionId: ""
-  //      };
-  //      // @ts-ignore
-  //      return program.methods.transferAssetsToVault(params).accounts({
-  //        signer: proposalOwner.publicKey,
-  //        signerTokenAccount: proposalOwnerTokenAccount.address,
-  //        swapProposal,
-  //        swapRegistry,
-  //        swapTokenVault,
-  //        mintAccount: mintNormalPublicKey,
-  //      }).signers([proposalOwner]).instruction();
-  //    }));
-  //
-  //
-  //    const transaction = new web3.Transaction();
-  //    transaction.add(...depositInstructions);
-  //    await provider.sendAndConfirm(transaction, [proposalOwner]);
-  //  }catch(e){
-  //    console.log(e);
-  //  }
-  // });
 
   it("[deposit_assets] should: proposal owner deposits offered items successfully", async () => {
     expect(Number(proposalOwnerTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
@@ -261,17 +219,71 @@ describe("transfer_assets", async () => {
       mintNormalPublicKey,
       proposalOwner.publicKey
     );
-    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL*98)
+    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 98);
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(
       provider.connection,
       swapTokenVault
     );
-    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL*2)
-
+    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 2);
   });
 
   it("[fulfil_assets] should: participants can cancel proposal anytime when proposal isn't fulfilled", async () => {
+    expect(Number(participantTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
+    const swapOption = swapOptions[1];
+
+    const fulfillingInstructions = await Promise.all(
+      swapOption.askingItems.map((item) => {
+        const params = {
+          proposalId,
+          swapItemId: item.id,
+          swapTokenVaultBump,
+          actionType: { fulfilling: {} },
+          optionId: swapOption.id
+        };
+        // @ts-ignore
+        return program.methods.transferAssetsToVault(params).accounts({
+          signer: participant.publicKey,
+          signerTokenAccount: participantTokenAccount.address,
+          swapProposal,
+          swapRegistry,
+          swapTokenVault,
+          mintAccount: mintNormalPublicKey
+        }).signers([participant]).instruction();
+      }));
+
+    const transaction = new web3.Transaction();
+    transaction.add(...fulfillingInstructions);
+
+    // send transaction
+    await provider.sendAndConfirm(transaction, [participant]);
+
+    const state = await program.account.swapProposal.fetch(swapProposal);
+
+    // @ts-ignore
+    expect(!!state.status.fulfilled).to.be.true;
+    expect(state.fulfilledBy.toBase58()).to.equals(participant.publicKey.toBase58());
+    expect(state.fulfilledWithOptionId).to.equals(swapOption.id);
+
+    const submittedSwapOption = state.swapOptions[1];
+    // @ts-ignore
+    expect(!!submittedSwapOption.askingItems.find(item => !item.status.deposited)).to.be.false;
+
+    // the proposal owner balance must be debited
+    participantTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      participant,
+      mintNormalPublicKey,
+      participant.publicKey
+    );
+    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 92);
+
+    // the proposal balance must be credited
+    const proposalTokenVaultAccount = await getAccount(
+      provider.connection,
+      swapTokenVault
+    );
+    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 10);
   });
 });

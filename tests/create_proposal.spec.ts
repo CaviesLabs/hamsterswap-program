@@ -110,13 +110,24 @@ describe("create_proposal", async () => {
     }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 
     // Construct data to be sent over the RPC.
-    const expiredAt= new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
+    const expiredAt = new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
     const offeredItems = [{
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       mintAccount: mintNormalPublicKey,
       amount: new BN(1)
     }];
     const swapOptions = [{
+      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+      askingItems: [{
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+        mintAccount: mintNormalPublicKey,
+        amount: new BN(4)
+      }, {
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+        mintAccount: mintNormalPublicKey,
+        amount: new BN(4)
+      }]
+    }, {
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       askingItems: [{
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
@@ -139,6 +150,7 @@ describe("create_proposal", async () => {
 
     // now we verify the state
     const state = await program.account.swapProposal.fetch(swapProposal);
+
     expect(state.id).eq(proposalId);
     expect(state.expiredAt.eq(new BN(expiredAt))).to.be.true;
     expect(!!state.bump).to.be.true;
@@ -151,13 +163,24 @@ describe("create_proposal", async () => {
     expect(state.offeredItems[0].amount.eq(new BN(1))).to.be.true;
     expect(!!state.offeredItems[0].status.created).to.be.true;
 
-     // @ts-ignore
-    expect(state.swapOptions.length).eq(1);
+    // @ts-ignore
+    expect(state.swapOptions.length).eq(2);
     expect(state.swapOptions[0].id).eq(swapOptions[0].id);
-    expect(state.swapOptions[0].askingItems.length).eq(1);
+    expect(state.swapOptions[0].askingItems.length).eq(2);
+
     expect(state.swapOptions[0].askingItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
     expect(state.swapOptions[0].askingItems[0].amount.eq(new BN(4))).to.be.true;
     expect(!!state.swapOptions[0].askingItems[0].status.created).to.be.true;
+
+    expect(state.swapOptions[0].askingItems[1].mintAccount.equals(mintNormalPublicKey)).to.be.true;
+    expect(state.swapOptions[0].askingItems[1].amount.eq(new BN(4))).to.be.true;
+    expect(!!state.swapOptions[0].askingItems[1].status.created).to.be.true;
+
+    expect(state.swapOptions[1].id).eq(swapOptions[1].id);
+    expect(state.swapOptions[1].askingItems.length).eq(1);
+    expect(state.swapOptions[1].askingItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
+    expect(state.swapOptions[1].askingItems[0].amount.eq(new BN(4))).to.be.true;
+    expect(!!state.swapOptions[1].askingItems[0].status.created).to.be.true;
 
     // expect log
     const transaction = await provider.connection.getParsedTransaction(tx, { commitment: "confirmed" });
@@ -172,15 +195,15 @@ describe("create_proposal", async () => {
     expect(event.data.expiredAt.eq(new BN(expiredAt))).to.be.true;
   });
 
-  it('[cancel_proposal] should: participants can cancel proposal anytime when proposal isn\'t fulfilled', async () => {
-      const response = await program.methods.cancelProposal({ id: proposalId }).accounts({
-        swapProposal,
-        signer: proposalOwner.publicKey
-      }).signers([proposalOwner]).rpc({commitment: 'confirmed'});
-      expect(!!response).to.be.true;
+  it("[cancel_proposal] should: participants can cancel proposal anytime when proposal isn't fulfilled", async () => {
+    const response = await program.methods.cancelProposal({ id: proposalId }).accounts({
+      swapProposal,
+      signer: proposalOwner.publicKey
+    }).signers([proposalOwner]).rpc({ commitment: "confirmed" });
+    expect(!!response).to.be.true;
     const state = await program.account.swapProposal.fetch(swapProposal);
     expect(state.id).eq(proposalId);
     // @ts-ignore
     expect(!!state.status.canceled).to.be.true;
-  })
+  });
 });

@@ -1,5 +1,5 @@
 use crate::*;
-use std::borrow::{BorrowMut};
+use std::borrow::{Borrow, BorrowMut};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub enum ActionType {
@@ -79,6 +79,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
             return Err(SwapError::DepositIsNotAvailable.into());
         }
 
+
         // find the swap item
         let mut item = swap_proposal.offered_items
             .iter_mut()
@@ -119,6 +120,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
     }
 
     fn fulfill(&mut self, params: TransferAssetsToVaultParams) -> Result<()> {
+        let current_params = params.clone();
         let swap_proposal = self.swap_proposal.borrow_mut();
 
         // check whether the proposal is still open for depositing
@@ -130,7 +132,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
         }
 
         // first reserve the proposal
-        swap_proposal.fulfilled_with_option_id = params.proposal_id;
+        swap_proposal.fulfilled_with_option_id = current_params.option_id;
         swap_proposal.fulfilled_by = self.signer.key().clone();
 
         // find the option id
@@ -142,7 +144,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
         // find the swap item
         let mut item = desired_option.asking_items
             .iter_mut()
-            .find(|x| x.id == params.swap_item_id.clone())
+            .find(|x| x.id == current_params.swap_item_id.clone())
             .unwrap();
 
         // Raise error

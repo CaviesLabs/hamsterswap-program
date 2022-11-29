@@ -1,6 +1,5 @@
 use crate::*;
 use std::borrow::Borrow;
-use anchor_spl::token::accessor::mint;
 
 // ================ Swap Platform Config ================ //
 // Here we define the account state that holds the administration info.
