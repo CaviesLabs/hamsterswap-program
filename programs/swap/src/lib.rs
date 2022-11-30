@@ -77,4 +77,11 @@ pub mod swap {
         Ok(())
     }
 
+    // Withdrawing or redeeming the proposal
+    pub fn transfer_assets_from_vault(ctx: Context<TransferAssetsFromVaultContext>, params: TransferAssetsFromVaultParams) -> Result<()> {
+        ctx.accounts.execute(params).unwrap();
+
+        Ok(())
+    }
+
 }

@@ -20,7 +20,7 @@ describe("transfer_assets", async () => {
   const deployer = provider.wallet as anchor.Wallet;
 
   // find the swap account
-  const [swapRegistry] = await PublicKey.findProgramAddress([
+  const [swapRegistry, swapRegistryBump] = await PublicKey.findProgramAddress([
     anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")
   ], program.programId);
 
@@ -228,7 +228,7 @@ describe("transfer_assets", async () => {
     expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 2);
   });
 
-  it("[fulfil_assets] should: participants can cancel proposal anytime when proposal isn't fulfilled", async () => {
+  it("[fulfil_assets] should: participant fulfill proposal successfully", async () => {
     expect(Number(participantTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
     const swapOption = swapOptions[1];
 
@@ -283,5 +283,106 @@ describe("transfer_assets", async () => {
       swapTokenVault
     );
     expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 10);
+  });
+
+  it("[redeem_assets] should: proposal owner can redeem items once the proposal is fulfilled", async () => {
+    const swapOption = swapOptions[1];
+
+    const fulfillingInstructions = await Promise.all(
+      swapOption.askingItems.map((item) => {
+        const params = {
+          proposalId,
+          swapItemId: item.id,
+          swapRegistryBump,
+          swapTokenVaultBump,
+          actionType: { redeeming: {} },
+        };
+        // @ts-ignore
+        return program.methods.transferAssetsFromVault(params).accounts({
+          signer: proposalOwner.publicKey,
+          signerTokenAccount: proposalOwnerTokenAccount.address,
+          swapProposal,
+          swapTokenVault,
+          swapRegistry,
+          mintAccount: mintNormalPublicKey
+        }).signers([proposalOwner]).instruction();
+      }));
+
+    const transaction = new web3.Transaction();
+    transaction.add(...fulfillingInstructions);
+
+
+    // send transaction
+    await provider.sendAndConfirm(transaction, [proposalOwner]);
+
+    const state = await program.account.swapProposal.fetch(swapProposal);
+
+    // @ts-ignore
+    const submittedSwapOption = state.swapOptions[1];
+    // @ts-ignore
+    expect(!!submittedSwapOption.askingItems.find(item => !item.status.redeemed)).to.be.false;
+
+    // the proposal owner balance must be debited
+    proposalOwnerTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      proposalOwner,
+      mintNormalPublicKey,
+      proposalOwner.publicKey
+    );
+    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 106);
+
+    // the proposal balance must be credited
+    const proposalTokenVaultAccount = await getAccount(
+      provider.connection,
+      swapTokenVault
+    );
+    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 2);
+  });
+
+  it("[redeem_assets] should: participant can redeem items once the proposal is fulfilled", async () => {
+    const fulfillingInstructions = await Promise.all(
+      offeredItems.map((item) => {
+        const params = {
+          proposalId,
+          swapItemId: item.id,
+          swapRegistryBump,
+          swapTokenVaultBump,
+          actionType: { redeeming: {} },
+        };
+        // @ts-ignore
+        return program.methods.transferAssetsFromVault(params).accounts({
+          signer: participant.publicKey,
+          signerTokenAccount: participantTokenAccount.address,
+          swapProposal,
+          swapTokenVault,
+          swapRegistry,
+          mintAccount: mintNormalPublicKey
+        }).signers([participant]).instruction();
+      }));
+
+    const transaction = new web3.Transaction();
+    transaction.add(...fulfillingInstructions);
+
+    await provider.sendAndConfirm(transaction, [participant]);
+    const state = await program.account.swapProposal.fetch(swapProposal);
+
+    // @ts-ignore
+    expect(!!state.offeredItems.find(item => !item.status.redeemed)).to.be.false;
+
+    // the proposal owner balance must be debited
+    participantTokenAccount = await getOrCreateAssociatedTokenAccount(
+      provider.connection,
+      participant,
+      mintNormalPublicKey,
+      participant.publicKey
+    );
+    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 94);
+
+    // the proposal balance must be credited
+    const proposalTokenVaultAccount = await getAccount(
+      provider.connection,
+      swapTokenVault
+    );
+    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 0);
   });
 });

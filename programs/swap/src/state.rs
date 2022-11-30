@@ -234,7 +234,7 @@ impl SwapProposal {
 
     // Check whether the proposal owner is the signer.
     pub fn is_fulfilled_participant(&self, signer: Pubkey) -> bool {
-        return self.owner == signer.key().clone();
+        return self.fulfilled_by == signer.key().clone();
     }
 
     // Define the state that the proposal is redeemable (the swap is completed)

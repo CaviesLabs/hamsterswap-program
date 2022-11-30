@@ -2,7 +2,7 @@ use crate::*;
 use std::borrow::{Borrow, BorrowMut};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
-pub enum ActionType {
+pub enum TransferActionType {
     #[default]
     Redeeming,
     Withdrawing
@@ -10,9 +10,10 @@ pub enum ActionType {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct TransferAssetsFromVaultParams {
+    pub swap_registry_bump: u8,
     pub swap_token_vault_bump: u8,
     pub proposal_id: String,
-    pub action_type: ActionType,
+    pub action_type: TransferActionType,
     pub swap_item_id: String,
 }
 
@@ -23,6 +24,12 @@ pub struct TransferAssetsFromVaultContext<'info> {
     pub signer: Signer<'info>,
 
     pub mint_account: Account<'info, Mint>,
+
+    #[account(
+        seeds = [PLATFORM_SEED],
+        bump = swap_registry.bump,
+    )]
+    pub swap_registry: Account<'info, SwapPlatformRegistry>,
 
     #[account(mut)]
     /// CHECK: the signer token account can be verified later
@@ -52,12 +59,12 @@ pub struct TransferAssetsFromVaultContext<'info> {
 impl<'info> TransferAssetsFromVaultContext<'info> {
     pub fn execute(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
         // Check and route for depositing
-        if params.action_type == ActionType::Redeeming {
+        if params.action_type == TransferActionType::Redeeming {
             return self.redeem(params);
         }
 
         // Check and route for fulfilling
-        if params.action_type == ActionType::Withdrawing {
+        if params.action_type == TransferActionType::Withdrawing {
             return self.withdraw(params);
         }
 
@@ -75,21 +82,41 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
 
         // Check whether the signer is allowed to redeem.
         if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
-            return self.proposal_owner_redeem(current_params);
+            return self.transfer_asking_items(current_params, SwapItemStatus::Redeemed);
         }
 
         if swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
-            return self.fulfilled_participant_redeem(current_params);
+            return self.transfer_offered_items(current_params, SwapItemStatus::Redeemed);
         }
 
         return Err(SwapError::InvalidValue.into());
     }
 
-    fn proposal_owner_redeem(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
+    fn withdraw(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
+        let current_params = params.clone();
+        let swap_proposal = self.swap_proposal.borrow_mut();
+
+        // check whether the proposal is still open for depositing
+        if !swap_proposal.is_proposal_withdrawable() {
+            return Err(SwapError::RedeemIsNotAvailable.into());
+        }
+
+        // Check whether the signer is allowed to redeem.
+        if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
+            return self.transfer_offered_items(current_params, SwapItemStatus::Withdrawn);
+        }
+
+        if swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
+            return self.transfer_asking_items(current_params, SwapItemStatus::Withdrawn);
+        }
+
+        return Err(SwapError::InvalidValue.into());
+    }
+
+    fn transfer_asking_items(&mut self, params: TransferAssetsFromVaultParams, desired_item_status: SwapItemStatus) -> Result<()> {
         let current_params = params.clone();
         let swap_proposal = self.swap_proposal.borrow_mut();
         let option_id = swap_proposal.fulfilled_with_option_id.clone();
-        let mint_account = self.mint_account.borrow();
 
         // find the option id
         let desired_option = swap_proposal.swap_options
@@ -108,10 +135,9 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         }
 
         // find the bump to sign with the pda
-        let bump = &[params.swap_token_vault_bump][..];
+        let bump = &[params.swap_registry_bump][..];
         let signer = token_account_signer!(
-            TOKEN_ACCOUNT_SEED,
-            mint_account.to_account_info().key.as_ref(),
+            PLATFORM_SEED,
             bump
         );
 
@@ -122,7 +148,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
                 Transfer {
                     from: self.swap_token_vault.to_account_info(),
                     to: self.signer_token_account.to_account_info(),
-                    authority: self.swap_token_vault.to_account_info(),
+                    authority: self.swap_registry.to_account_info(),
                 },
                 signer
             ),
@@ -130,14 +156,13 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         ).unwrap();
 
         // update the item status
-        item.status = SwapItemStatus::Redeemed;
+        item.status = desired_item_status;
 
         Ok(())
     }
 
-    fn fulfilled_participant_redeem(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
+    fn transfer_offered_items(&mut self, params: TransferAssetsFromVaultParams, status: SwapItemStatus) -> Result<()> {
         let swap_proposal = self.swap_proposal.borrow_mut();
-        let mint_account = self.mint_account.borrow();
 
         // find the swap item
         let mut item = swap_proposal.offered_items
@@ -151,10 +176,9 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         }
 
         // find the bump to sign with the pda
-        let bump = &[params.swap_token_vault_bump][..];
+        let bump = &[params.swap_registry_bump][..];
         let signer = token_account_signer!(
-            TOKEN_ACCOUNT_SEED,
-            mint_account.to_account_info().key.as_ref(),
+            PLATFORM_SEED,
             bump
         );
 
@@ -165,7 +189,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
                 Transfer {
                     from: self.swap_token_vault.to_account_info(),
                     to: self.signer_token_account.to_account_info(),
-                    authority: self.swap_token_vault.to_account_info(),
+                    authority: self.swap_registry.to_account_info(),
                 },
                 signer
             ),
@@ -173,51 +197,8 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         ).unwrap();
 
         // update the item status
-        item.status = SwapItemStatus::Redeemed;
+        item.status = status;
 
         return Ok(());
     }
-
-    fn withdraw(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
-        let swap_proposal = self.swap_proposal.borrow_mut();
-
-        // find the swap item
-        let mut item = swap_proposal.offered_items
-            .iter_mut()
-            .find(|x| x.id == params.swap_item_id)
-            .unwrap();
-
-        // Raise error
-        if item.status != SwapItemStatus::Created {
-            return Err(SwapError::DepositIsNotAvailable.into());
-        }
-
-        // transfer the token
-        token::transfer(
-            CpiContext::new(
-                self.token_program.to_account_info(),
-                Transfer {
-                    from: self.signer_token_account.to_account_info(),
-                    to: self.swap_token_vault.to_account_info(),
-                    authority: self.signer.to_account_info(),
-                },
-            ),
-            item.amount,
-        ).unwrap();
-
-        // update the item status
-        item.status = SwapItemStatus::Deposited;
-
-        // update the proposal status if applicable
-        if (swap_proposal.offered_items
-            .iter()
-            .filter(|&x| x.status == SwapItemStatus::Deposited)
-            .count()
-        ) == swap_proposal.offered_items.len() {
-            swap_proposal.status = SwapProposalStatus::Deposited;
-        }
-
-        return Ok(());
-    }
-
 }
