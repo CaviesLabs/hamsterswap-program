@@ -51,7 +51,7 @@ impl<'info> UpdateSwapPlatformContext<'info> {
         // emit event
         swap_emit!(
             SwapConfigUpdated {
-                owner: self.owner.key().clone(),
+                actor: self.owner.key().clone(),
                 max_allowed_options: params.max_allowed_options.clone(),
                 max_allowed_items: params.max_allowed_items.clone(),
             }

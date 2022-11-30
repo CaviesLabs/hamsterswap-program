@@ -207,7 +207,7 @@ describe("create_proposal", async () => {
     const [event] = eventParser.parseLogs(transaction.meta.logMessages);
 
     // Expect emitted logs
-    expect(event.data.owner.toString() === proposalOwner.publicKey.toString()).equals(true);
+    expect(event.data.actor.toString() === proposalOwner.publicKey.toString()).equals(true);
     expect(event.data.proposalKey.toString() === swapProposal.toString()).equals(true);
     expect(event.data.id).equals(proposalId);
     // @ts-ignore

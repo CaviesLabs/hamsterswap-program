@@ -31,6 +31,16 @@ impl<'info> CancelProposalContext<'info> {
             return Ok(());
         }
 
+        // emit event
+        swap_emit!({
+           ProposalCanceled {
+                actor: self.swap_proposal.owner.key().clone(),
+                status: SwapProposalStatus::Canceled,
+                id: self.swap_proposal.id.clone(),
+                proposal_key: self.swap_proposal.key().clone(),
+            }
+        });
+
         // ok
         return Err(SwapError::ProposalCannotBeCanceled.into());
     }

@@ -54,6 +54,16 @@ impl<'info> CreateTokenVaultContext<'info> {
             }
         );
 
+        // emit event
+        swap_emit!(
+            VaultCreated {
+                actor: self.owner.key().clone(),
+                authority: self.swap_registry.key().clone(),
+                associated_account: self.swap_token_vault.key().clone(),
+                mint_account: self.mint_account.key().clone()
+            }
+        );
+
         Ok(())
     }
 }

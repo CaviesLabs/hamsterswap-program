@@ -30,6 +30,8 @@ pub enum SwapError {
     WithdrawalIsNotAvailable,
     #[msg("Redeem is not available for the proposal")]
     RedeemIsNotAvailable,
+    #[msg("Transfer token from vault is not available for the proposal")]
+    TransferTokenFromVaultIsNotAvailable,
     #[msg("Deposit is not available for the proposal")]
     DepositIsNotAvailable,
     #[msg("Fulfilling is not available for the proposal")]

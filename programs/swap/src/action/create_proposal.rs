@@ -73,6 +73,7 @@ impl<'info> CreateProposalContext<'info> {
                     swap_item.amount = item.amount;
                     swap_item.mint_account = item.mint_account;
                     swap_item.id = item.id;
+                    swap_item.owner = Pubkey::default();
 
                     return swap_item;
                 }).collect();
@@ -86,6 +87,7 @@ impl<'info> CreateProposalContext<'info> {
             swap_item.amount = item.amount;
             swap_item.mint_account = item.mint_account;
             swap_item.id = item.id;
+            swap_item.owner = self.proposal_owner.key().clone();
 
             return swap_item;
         }).collect();
@@ -103,7 +105,7 @@ impl<'info> CreateProposalContext<'info> {
                 id: self.swap_proposal.id.to_string(),
                 proposal_key: self.swap_proposal.key().clone(),
                 expired_at: self.swap_proposal.expired_at as i64,
-                owner: self.swap_proposal.owner.clone()
+                actor: self.swap_proposal.owner.clone()
             }
         );
 

@@ -45,7 +45,7 @@ describe("update_swap_program", async () => {
     const [event] = eventParser.parseLogs(transaction.meta.logMessages);
 
     // Expect emitted logs
-    expect(event.data.owner.toString() === deployer.publicKey.toString()).equals(true);
+    expect(event.data.actor.toString() === deployer.publicKey.toString()).equals(true);
     expect(event.data.maxAllowedOptions === 3).equals(true);
     expect(event.data.maxAllowedItems === 3).equals(true);
   });

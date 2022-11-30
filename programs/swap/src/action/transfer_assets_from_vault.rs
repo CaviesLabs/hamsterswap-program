@@ -58,12 +58,12 @@ pub struct TransferAssetsFromVaultContext<'info> {
 
 impl<'info> TransferAssetsFromVaultContext<'info> {
     pub fn execute(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
-        // Check and route for depositing
+        // Check and route for redeeming
         if params.action_type == TransferActionType::Redeeming {
             return self.redeem(params);
         }
 
-        // Check and route for fulfilling
+        // Check and route for withdrawal
         if params.action_type == TransferActionType::Withdrawing {
             return self.withdraw(params);
         }
@@ -75,10 +75,19 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         let current_params = params.clone();
         let swap_proposal = self.swap_proposal.borrow();
 
-        // check whether the proposal is still open for depositing
+        // check whether the proposal is still open for redeeming
         if !swap_proposal.is_proposal_redeemable() {
             return Err(SwapError::RedeemIsNotAvailable.into());
         }
+
+        swap_emit!(
+            ItemRedeemed {
+                id: params.swap_item_id.clone(),
+                proposal_key: swap_proposal.key().clone(),
+                status: SwapItemStatus::Redeemed,
+                actor: self.signer.key().clone()
+            }
+        );
 
         // Check whether the signer is allowed to redeem.
         if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
@@ -96,12 +105,22 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         let current_params = params.clone();
         let swap_proposal = self.swap_proposal.borrow();
 
-        // check whether the proposal is still open for depositing
+        // check whether the proposal is still open for withdrawal
         if !swap_proposal.is_proposal_withdrawable() {
             return Err(SwapError::WithdrawalIsNotAvailable.into());
         }
 
-        // Check whether the signer is allowed to redeem.
+        // emit
+        swap_emit!(
+            ItemWithdrawn {
+                id: params.swap_item_id.clone(),
+                proposal_key: swap_proposal.key().clone(),
+                status: SwapItemStatus::Redeemed,
+                actor: self.signer.key().clone()
+            }
+        );
+
+        // Check whether the signer is allowed to withdraw.
         if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
             return self.transfer_offered_items(current_params, SwapItemStatus::Withdrawn);
         }
@@ -131,7 +150,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
             .unwrap();
 
         if item.status != SwapItemStatus::Deposited {
-            return Err(SwapError::RedeemIsNotAvailable.into());
+            return Err(SwapError::TransferTokenFromVaultIsNotAvailable.into());
         }
 
         // find the bump to sign with the pda
@@ -172,7 +191,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
 
         // Redeem is not available
         if item.status != SwapItemStatus::Deposited {
-            return Err(SwapError::RedeemIsNotAvailable.into());
+            return Err(SwapError::TransferTokenFromVaultIsNotAvailable.into());
         }
 
         // find the bump to sign with the pda

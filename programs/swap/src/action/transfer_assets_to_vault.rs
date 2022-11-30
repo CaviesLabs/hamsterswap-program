@@ -67,12 +67,12 @@ impl<'info> TransferAssetsToVaultContext<'info> {
 
     fn deposit(&mut self, params: TransferAssetsToVaultParams) -> Result<()> {
         let swap_proposal = self.swap_proposal.borrow_mut();
+        let swap_proposal_key = swap_proposal.key().clone();
 
         // check whether the proposal is still open for depositing
         if !swap_proposal.is_proposal_open_for_depositing() {
             return Err(SwapError::DepositIsNotAvailable.into());
         }
-
 
         // find the swap item
         let mut item = swap_proposal.offered_items
@@ -100,6 +100,16 @@ impl<'info> TransferAssetsToVaultContext<'info> {
 
         // update the item status
         item.status = SwapItemStatus::Deposited;
+        item.owner = self.signer.key().clone();
+
+        swap_emit!(
+            ItemDeposited {
+                id: item.id.clone(),
+                status: SwapItemStatus::Deposited,
+                proposal_key: swap_proposal_key,
+                actor: self.signer.key().clone(),
+            }
+        );
 
         // update the proposal status if applicable
         if (swap_proposal.offered_items
@@ -108,6 +118,16 @@ impl<'info> TransferAssetsToVaultContext<'info> {
             .count()
         ) == swap_proposal.offered_items.len() {
             swap_proposal.status = SwapProposalStatus::Deposited;
+
+            // emit event
+            swap_emit!(
+                ProposalDeposited {
+                    status: SwapProposalStatus::Deposited,
+                    actor: self.signer.key().clone(),
+                    proposal_key: swap_proposal_key,
+                    id: swap_proposal.id.clone()
+                }
+            );
         }
 
         return Ok(());
@@ -116,6 +136,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
     fn fulfill(&mut self, params: TransferAssetsToVaultParams) -> Result<()> {
         let current_params = params.clone();
         let swap_proposal = self.swap_proposal.borrow_mut();
+        let swap_proposal_key = swap_proposal.key().clone();
 
         // check whether the proposal is still open for depositing
         if !swap_proposal.is_proposal_open_for_fulfilling(
@@ -161,6 +182,16 @@ impl<'info> TransferAssetsToVaultContext<'info> {
 
         // update the item status
         item.status = SwapItemStatus::Deposited;
+        item.owner = self.signer.key().clone();
+
+        swap_emit!(
+            ItemDeposited {
+                id: item.id.clone(),
+                status: SwapItemStatus::Deposited,
+                proposal_key: swap_proposal_key,
+                actor: self.signer.key().clone(),
+            }
+        );
 
         // update the proposal status if applicable
         if (desired_option.asking_items
@@ -169,6 +200,16 @@ impl<'info> TransferAssetsToVaultContext<'info> {
             .count()
         ) == swap_proposal.offered_items.len() {
             swap_proposal.status = SwapProposalStatus::Fulfilled;
+
+            // emit event
+            swap_emit!(
+                ProposalFulfilled {
+                    status: SwapProposalStatus::Fulfilled,
+                    actor: self.signer.key().clone(),
+                    proposal_key: swap_proposal_key,
+                    id: swap_proposal.id.clone()
+                }
+            );
         }
 
         return Ok(());

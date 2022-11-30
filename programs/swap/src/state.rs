@@ -119,6 +119,9 @@ pub struct SwapItem {
 
     // Define the item type
     pub item_type: SwapItemType,
+
+    // Define the owner of the item
+    pub owner: Pubkey,
 }
 
 // Implement the swap item functions
@@ -127,6 +130,7 @@ impl SwapItem {
     fn default() -> SwapItem {
         SwapItem {
             id: String::default(),
+            owner: Pubkey::default(),
             mint_account: Pubkey::default(),
             item_type: SwapItemType::OnChain,
             status: SwapItemStatus::Created,
