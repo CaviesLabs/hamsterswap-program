@@ -165,12 +165,10 @@ describe("transfer_assets", async () => {
 
     let createVaultInstruction;
     if(!await provider.connection.getAccountInfo(swapTokenVault)) {
-      console.log('create account - proposal owner');
       createVaultInstruction = await program.methods.createTokenVault().accounts({
         mintAccount: mintNormalPublicKey,
         swapRegistry,
         swapTokenVault,
-        signer: proposalOwner.publicKey
       }).signers([proposalOwner]).instruction();
     }
 
@@ -246,10 +244,10 @@ describe("transfer_assets", async () => {
     let createVaultInstruction;
     if(!await provider.connection.getAccountInfo(swapTokenVault)) {
       createVaultInstruction = await program.methods.createTokenVault().accounts({
+        signer: participant.publicKey,
         mintAccount: mintNormalPublicKey,
         swapRegistry,
         swapTokenVault,
-        signer: participant.publicKey
       }).signers([participant]).instruction();
     }
 
@@ -264,8 +262,8 @@ describe("transfer_assets", async () => {
         };
         // @ts-ignore
         return program.methods.transferAssetsToVault(params).accounts({
-          signer: participant.publicKey,
           signerTokenAccount: participantTokenAccount.address,
+          signer: participant.publicKey,
           swapProposal,
           swapTokenVault,
           mintAccount: mintNormalPublicKey
@@ -323,8 +321,8 @@ describe("transfer_assets", async () => {
         };
         // @ts-ignore
         return program.methods.transferAssetsFromVault(params).accounts({
-          signer: proposalOwner.publicKey,
           signerTokenAccount: proposalOwnerTokenAccount.address,
+          signer: proposalOwner.publicKey,
           swapProposal,
           swapTokenVault,
           swapRegistry,
@@ -375,8 +373,8 @@ describe("transfer_assets", async () => {
         };
         // @ts-ignore
         return program.methods.transferAssetsFromVault(params).accounts({
-          signer: participant.publicKey,
           signerTokenAccount: participantTokenAccount.address,
+          signer: participant.publicKey,
           swapProposal,
           swapTokenVault,
           swapRegistry,

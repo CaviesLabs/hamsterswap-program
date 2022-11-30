@@ -148,7 +148,7 @@ describe("create_proposal", async () => {
       mintAccount: mintNormalPublicKey,
       swapRegistry,
       swapTokenVault,
-      owner: deployer.publicKey
+      signer: deployer.publicKey
     }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 
     // Construct data to be sent over the RPC.
@@ -294,12 +294,7 @@ describe("create_proposal", async () => {
     const transaction = new web3.Transaction();
     transaction.add(...fulfillingInstructions);
 
-    try {
-      await provider.sendAndConfirm(transaction, [proposalOwner]);
-
-    } catch (e) {
-      console.log(e);
-    }
+    await provider.sendAndConfirm(transaction, [proposalOwner]);
 
     const state = await program.account.swapProposal.fetch(swapProposal);
 

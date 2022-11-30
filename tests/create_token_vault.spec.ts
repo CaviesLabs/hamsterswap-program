@@ -46,7 +46,7 @@ describe("create_token_vault", async () => {
         mintAccount: mintNormalPublicKey,
         swapRegistry,
         swapTokenVault,
-        owner: otherUser.publicKey
+        signer: otherUser.publicKey
       }).signers([otherUser]).rpc({ commitment: "confirmed" });
 
       throw new Error('Failed');
