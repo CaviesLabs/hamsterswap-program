@@ -37,8 +37,6 @@ describe("transfer_assets", async () => {
   let expiredAt;
   let swapTokenVaultBump;
 
-  let getVaultTokenCreation;
-
   // Construct accounts for proposal creation
   proposalOwner = Keypair.generate();
   participant = Keypair.generate();
