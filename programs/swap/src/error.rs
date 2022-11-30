@@ -26,6 +26,8 @@ pub enum SwapError {
     UnAllowedMintToken,
     #[msg("Proposal cannot be canceled")]
     ProposalCannotBeCanceled,
+    #[msg("Withdrawal is not available for the proposal")]
+    WithdrawalIsNotAvailable,
     #[msg("Redeem is not available for the proposal")]
     RedeemIsNotAvailable,
     #[msg("Deposit is not available for the proposal")]

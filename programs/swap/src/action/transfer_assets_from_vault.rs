@@ -73,7 +73,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
 
     fn redeem(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
         let current_params = params.clone();
-        let swap_proposal = self.swap_proposal.borrow_mut();
+        let swap_proposal = self.swap_proposal.borrow();
 
         // check whether the proposal is still open for depositing
         if !swap_proposal.is_proposal_redeemable() {
@@ -94,11 +94,11 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
 
     fn withdraw(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
         let current_params = params.clone();
-        let swap_proposal = self.swap_proposal.borrow_mut();
+        let swap_proposal = self.swap_proposal.borrow();
 
         // check whether the proposal is still open for depositing
         if !swap_proposal.is_proposal_withdrawable() {
-            return Err(SwapError::RedeemIsNotAvailable.into());
+            return Err(SwapError::WithdrawalIsNotAvailable.into());
         }
 
         // Check whether the signer is allowed to redeem.
