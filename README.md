@@ -28,7 +28,7 @@ $ yarn install
 $  anchor deploy --program-name swap --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
 ```
 
-1/ Deploy devnet 
+2/ Deploy mainnet 
 
 ```bash
 $  anchor deploy --program-name swap --provider.cluster mainnet-beta --provider.wallet ~/.config/solana/id.json
