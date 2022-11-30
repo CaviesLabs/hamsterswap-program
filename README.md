@@ -20,19 +20,46 @@
 $ yarn install
 ```
 
+## Get new address of program
+```bash
+anchor build
+solana address -k target/deploy/stake-keypair.json
+# above program will output the address of program
+# replace all `EdeRcNsVGU1s1NXZZo8FhLD8iePxvoUCdbvwVGnj778f` with your new address
+```
 ## Deploy swap program onto devnet/mainnet
 
 1/ Deploy devnet 
+
+Deploy
 
 ```bash
 $  anchor deploy --program-name swap --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
 ```
 
+Upgrade
+
+```bash
+$ anchor upgrade target/deploy/swap.so --program-id EdeRcNsVGU1s1NXZZo8FhLD8iePxvoUCdbvwVGnj778f --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+```
+
 2/ Deploy mainnet 
+
+Deploy
 
 ```bash
 $  anchor deploy --program-name swap --provider.cluster mainnet-beta --provider.wallet ~/.config/solana/id.json
 ```
+
+Upgrade
+
+```bash
+$ anchor upgrade target/deploy/swap.so --program-id EdeRcNsVGU1s1NXZZo8FhLD8iePxvoUCdbvwVGnj778f --provider.cluster mainnet-beta --provider.wallet ~/.config/solana/id.json
+```
+
+
+
+3/ Upgrade
 
 ## Test
 

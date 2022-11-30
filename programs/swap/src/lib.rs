@@ -18,7 +18,7 @@ pub use state::*;
 pub use event::*;
 pub use macros::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("EdeRcNsVGU1s1NXZZo8FhLD8iePxvoUCdbvwVGnj778f");
 
 #[program]
 pub mod swap {
