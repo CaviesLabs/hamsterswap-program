@@ -2,17 +2,13 @@ use crate::*;
 
 #[derive(Accounts)]
 pub struct CreateTokenVaultContext<'info> {
-    #[account(
-        mut,
-        address = swap_registry.owner @ SwapError::OnlyAdministrator
-    )]
-    pub owner: Signer<'info>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
 
     #[account(
         mut,
         seeds = [PLATFORM_SEED],
         bump = swap_registry.bump,
-        has_one = owner
     )]
     pub swap_registry: Account<'info, SwapPlatformRegistry>,
 
@@ -22,7 +18,7 @@ pub struct CreateTokenVaultContext<'info> {
         token::mint = mint_account,
         token::authority = swap_registry,
         seeds = [TOKEN_ACCOUNT_SEED, mint_account.key().as_ref()],
-        payer = owner,
+        payer = signer,
         bump
     )]
     pub swap_token_vault: Account<'info, TokenAccount>,
@@ -57,7 +53,7 @@ impl<'info> CreateTokenVaultContext<'info> {
         // emit event
         swap_emit!(
             VaultCreated {
-                actor: self.owner.key().clone(),
+                actor: self.signer.key().clone(),
                 authority: self.swap_registry.key().clone(),
                 associated_account: self.swap_token_vault.key().clone(),
                 mint_account: self.mint_account.key().clone()

@@ -39,7 +39,7 @@ describe("initialize_swap_program", async () => {
     expect(state.maxAllowedOptions).equals(5);
 
     // @ts-ignore
-    expect(state.allowedMintAccounts.length).equals(1);
+    expect(state.allowedMintAccounts.length).equals(0);
   });
 
   it("[initialize_swap_program] should: deployer fails to re-initialize the swap registry", async () => {

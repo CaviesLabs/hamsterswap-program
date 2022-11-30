@@ -5,7 +5,7 @@ import {
   createMint,
   mintTo,
   getOrCreateAssociatedTokenAccount,
-  getAccount
+  getAccount,
 } from "@solana/spl-token";
 import { expect } from "chai";
 
@@ -36,6 +36,8 @@ describe("transfer_assets", async () => {
   let participantTokenAccount;
   let expiredAt;
   let swapTokenVaultBump;
+
+  let getVaultTokenCreation;
 
   // Construct accounts for proposal creation
   proposalOwner = Keypair.generate();
@@ -125,13 +127,6 @@ describe("transfer_assets", async () => {
       anchor.utils.bytes.utf8.encode(proposalId)
     ], program.programId);
 
-    // now we whitelist the token first
-    await program.methods.createTokenVault().accounts({
-      mintAccount: mintNormalPublicKey,
-      swapRegistry,
-      swapTokenVault,
-      owner: deployer.publicKey
-    }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
 
     // Construct data to be sent over the RPC.
     expiredAt = new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
@@ -168,6 +163,17 @@ describe("transfer_assets", async () => {
   it("[deposit_assets] should: proposal owner deposits offered items successfully", async () => {
     expect(Number(proposalOwnerTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
 
+    let createVaultInstruction;
+    if(!await provider.connection.getAccountInfo(swapTokenVault)) {
+      console.log('create account - proposal owner');
+      createVaultInstruction = await program.methods.createTokenVault().accounts({
+        mintAccount: mintNormalPublicKey,
+        swapRegistry,
+        swapTokenVault,
+        signer: proposalOwner.publicKey
+      }).signers([proposalOwner]).instruction();
+    }
+
     const depositInstructions = await Promise.all(
       offeredItems.map((item) => {
         const params = {
@@ -187,6 +193,10 @@ describe("transfer_assets", async () => {
         }).signers([proposalOwner]).instruction();
       }));
 
+    let inx = [];
+    if(createVaultInstruction) {
+      inx.push(createVaultInstruction);
+    }
     // now we deposit two times in a row
     await program.methods.createProposal({
       id: proposalId,
@@ -200,6 +210,7 @@ describe("transfer_assets", async () => {
         swapProposal: swapProposal
       })
       .signers([proposalOwner])
+      .preInstructions(inx)
       .postInstructions(depositInstructions)
       .rpc({ commitment: "confirmed" });
 
@@ -232,7 +243,17 @@ describe("transfer_assets", async () => {
     expect(Number(participantTokenAccount.amount)).equals(web3.LAMPORTS_PER_SOL * 100);
     const swapOption = swapOptions[1];
 
-    const fulfillingInstructions = await Promise.all(
+    let createVaultInstruction;
+    if(!await provider.connection.getAccountInfo(swapTokenVault)) {
+      createVaultInstruction = await program.methods.createTokenVault().accounts({
+        mintAccount: mintNormalPublicKey,
+        swapRegistry,
+        swapTokenVault,
+        signer: participant.publicKey
+      }).signers([participant]).instruction();
+    }
+
+    let fulfillingInstructions = await Promise.all(
       swapOption.askingItems.map((item) => {
         const params = {
           proposalId,
@@ -252,6 +273,9 @@ describe("transfer_assets", async () => {
       }));
 
     const transaction = new web3.Transaction();
+    if(createVaultInstruction) {
+      fulfillingInstructions = [createVaultInstruction, ...fulfillingInstructions];
+    }
     transaction.add(...fulfillingInstructions);
 
     // send transaction
