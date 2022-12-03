@@ -87,30 +87,35 @@ describe("create_proposal", async () => {
     offeredItems = [{
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       mintAccount: mintNormalPublicKey,
-      amount: new BN(web3.LAMPORTS_PER_SOL)
+      amount: new BN(web3.LAMPORTS_PER_SOL),
+      itemType: {currency: {}}
     },
       {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL)
+        amount: new BN(web3.LAMPORTS_PER_SOL),
+        itemType: {currency: {}}
       }];
     swapOptions = [{
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       askingItems: [{
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4)
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+        itemType: {currency: {}}
       }, {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4)
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+        itemType: {nft: {}}
       }]
     }, {
       id: Keypair.generate().publicKey.toBase58().slice(0, 10),
       askingItems: [{
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4)
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+        itemType: {nft: {}}
       }]
     }];
   });

@@ -4,7 +4,8 @@ use crate::*;
 pub struct SwapItemInfo {
     pub id: String,
     pub mint_account: Pubkey,
-    pub amount: u64
+    pub amount: u64,
+    pub item_type: SwapItemType
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
@@ -74,6 +75,7 @@ impl<'info> CreateProposalContext<'info> {
                     swap_item.mint_account = item.mint_account;
                     swap_item.id = item.id;
                     swap_item.owner = Pubkey::default();
+                    swap_item.item_type = item.item_type;
 
                     return swap_item;
                 }).collect();
@@ -87,6 +89,7 @@ impl<'info> CreateProposalContext<'info> {
             swap_item.amount = item.amount;
             swap_item.mint_account = item.mint_account;
             swap_item.id = item.id;
+            swap_item.item_type = item.item_type;
             swap_item.owner = self.proposal_owner.key().clone();
 
             return swap_item;
