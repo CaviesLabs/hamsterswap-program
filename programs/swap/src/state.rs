@@ -80,10 +80,10 @@ impl SwapPlatformRegistry {
 pub enum SwapItemType {
     // Define the onchain swap item
     #[default]
-    OnChain,
+    NFT,
 
     // Define the offchain swap item
-    OffChain,
+    Currency,
 }
 
 // Here we define the swap option type
@@ -132,7 +132,7 @@ impl SwapItem {
             id: String::default(),
             owner: Pubkey::default(),
             mint_account: Pubkey::default(),
-            item_type: SwapItemType::OnChain,
+            item_type: SwapItemType::NFT,
             status: SwapItemStatus::Created,
             amount: 0,
         }
