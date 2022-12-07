@@ -228,14 +228,6 @@ impl SwapProposal {
         return self.expired_at > Clock::get().unwrap().unix_timestamp as u64
     }
 
-    // Define the state that the proposal is still open for participants.
-    pub fn is_proposal_open_for_participants(&self) -> bool {
-        return self.is_proposal_still_in_time_window()
-            && self.status == SwapProposalStatus::Deposited // need to be updated once depositing occurs
-            && self.fulfilled_by == Pubkey::default() // need to be updated once depositing occurs
-            && self.fulfilled_with_option_id == String::default(); // need to be updated once depositing occurs
-    }
-
     // Check whether the proposal owner is the signer.
     pub fn is_proposal_owner(&self, signer: Pubkey) -> bool {
         return self.owner == signer.key().clone();
@@ -246,16 +238,12 @@ impl SwapProposal {
         return self.fulfilled_by == signer.key().clone();
     }
 
-    // Define the state that the proposal is redeemable (the swap is completed)
-    pub fn is_proposal_redeemable(&self) -> bool {
-        return !self.is_proposal_open_for_participants()
-                && self.status == SwapProposalStatus::Fulfilled; // need to be updated once depositing is completed.
-    }
-
-    // Define the state that the proposal is withdrawable (the swap is canceled).
-    pub fn is_proposal_withdrawable(&self) -> bool {
-        return !self.is_proposal_open_for_participants()
-            && self.status == SwapProposalStatus::Canceled; // need to be updated once the proposal owner cancel the proposal.
+    // Define the state that the proposal is still open for participants.
+    pub fn is_proposal_open_for_participants(&self) -> bool {
+        return self.is_proposal_still_in_time_window()
+            && self.status == SwapProposalStatus::Deposited // need to be updated once depositing occurs
+            && self.fulfilled_by == Pubkey::default() // need to be updated once depositing occurs
+            && self.fulfilled_with_option_id == String::default(); // need to be updated once depositing occurs
     }
 
     // Define whether the proposal can be canceled for a pubkey.
@@ -275,12 +263,24 @@ impl SwapProposal {
         return self.is_proposal_still_in_time_window()
             && self.status == SwapProposalStatus::Deposited
             && (
-                self.fulfilled_with_option_id == option_id
+            self.fulfilled_with_option_id == option_id
                 || self.fulfilled_with_option_id == String::default()
-            )
+        )
             && (
-                self.fulfilled_by == participant.key().clone() ||
+            self.fulfilled_by == participant.key().clone() ||
                 self.fulfilled_by == Pubkey::default().clone()
-            );
+        );
+    }
+
+    // Define the state that the proposal is redeemable (the swap is completed)
+    pub fn is_proposal_redeemable(&self) -> bool {
+        return !self.is_proposal_open_for_participants()
+                && self.status == SwapProposalStatus::Fulfilled; // need to be updated once depositing is completed.
+    }
+
+    // Define the state that the proposal is withdrawable (the swap is canceled).
+    pub fn is_proposal_withdrawable(&self) -> bool {
+        return !self.is_proposal_open_for_participants()
+            && self.status == SwapProposalStatus::Canceled; // need to be updated once the proposal owner cancel the proposal.
     }
 }
