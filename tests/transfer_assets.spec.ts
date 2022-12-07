@@ -159,6 +159,11 @@ describe("transfer_assets", async () => {
         mintAccount: mintNormalPublicKey,
         amount: new BN(web3.LAMPORTS_PER_SOL * 4),
         itemType: {currency: {}}
+      },{
+        id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+        mintAccount: mintNormalPublicKey,
+        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+        itemType: {currency: {}}
       }]
     }];
   });
@@ -300,14 +305,14 @@ describe("transfer_assets", async () => {
       mintNormalPublicKey,
       participant.publicKey
     );
-    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 92);
+    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 88);
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(
       provider.connection,
       swapTokenVault
     );
-    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 10);
+    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 14);
   });
 
   it("[redeem_assets] should: proposal owner can redeem items once the proposal is fulfilled", async () => {
@@ -354,7 +359,7 @@ describe("transfer_assets", async () => {
       mintNormalPublicKey,
       proposalOwner.publicKey
     );
-    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 106);
+    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 110);
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(
@@ -401,7 +406,7 @@ describe("transfer_assets", async () => {
       mintNormalPublicKey,
       participant.publicKey
     );
-    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 94);
+    expect(Number(participantTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 90);
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(

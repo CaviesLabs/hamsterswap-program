@@ -198,7 +198,7 @@ impl<'info> TransferAssetsToVaultContext<'info> {
             .iter()
             .filter(|&x| x.status == SwapItemStatus::Deposited)
             .count()
-        ) == swap_proposal.offered_items.len() {
+        ) == desired_option.asking_items.len() {
             swap_proposal.status = SwapProposalStatus::Fulfilled;
 
             // emit event
