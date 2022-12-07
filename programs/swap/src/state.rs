@@ -223,9 +223,14 @@ impl SwapProposal {
         }
     }
 
+    // Define whether the proposal is still in time window
+    pub fn is_proposal_still_in_time_window(&self) -> bool {
+        return self.expired_at > Clock::get().unwrap().unix_timestamp as u64
+    }
+
     // Define the state that the proposal is still open for participants.
     pub fn is_proposal_open_for_participants(&self) -> bool {
-        return self.expired_at > Clock::get().unwrap().unix_timestamp as u64
+        return self.is_proposal_still_in_time_window()
             && self.status == SwapProposalStatus::Deposited // need to be updated once depositing occurs
             && self.fulfilled_by == Pubkey::default() // need to be updated once depositing occurs
             && self.fulfilled_with_option_id == String::default(); // need to be updated once depositing occurs
@@ -261,12 +266,14 @@ impl SwapProposal {
 
     // Define whether the state is open for depositing.
     pub fn is_proposal_open_for_depositing(&self) -> bool {
-        return self.status == SwapProposalStatus::Created;
+        return self.is_proposal_still_in_time_window()
+            && self.status == SwapProposalStatus::Created;
     }
 
     // Define whether the state is open for depositing.
     pub fn is_proposal_open_for_fulfilling(&self, option_id: String, participant: Pubkey) -> bool {
-        return self.status == SwapProposalStatus::Deposited
+        return self.is_proposal_still_in_time_window()
+            && self.status == SwapProposalStatus::Deposited
             && (
                 self.fulfilled_with_option_id == option_id
                 || self.fulfilled_with_option_id == String::default()
