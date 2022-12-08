@@ -351,6 +351,8 @@ describe("transfer_assets", async () => {
     const submittedSwapOption = state.swapOptions[1];
     // @ts-ignore
     expect(!!submittedSwapOption.askingItems.find(item => !item.status.redeemed)).to.be.false;
+    // @ts-ignore
+    expect(!!state.status.redeemed).to.be.false;
 
     // the proposal owner balance must be debited
     proposalOwnerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -398,6 +400,8 @@ describe("transfer_assets", async () => {
 
     // @ts-ignore
     expect(!!state.offeredItems.find(item => !item.status.redeemed)).to.be.false;
+    // @ts-ignore
+    expect(!!state.status.redeemed).to.be.true;
 
     // the proposal owner balance must be debited
     participantTokenAccount = await getOrCreateAssociatedTokenAccount(

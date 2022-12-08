@@ -5,7 +5,7 @@ use std::borrow::{Borrow, BorrowMut};
 pub enum TransferActionType {
     #[default]
     Redeeming,
-    Withdrawing
+    Withdrawing,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
@@ -26,8 +26,8 @@ pub struct TransferAssetsFromVaultContext<'info> {
     pub mint_account: Account<'info, Mint>,
 
     #[account(
-        seeds = [PLATFORM_SEED],
-        bump = swap_registry.bump,
+    seeds = [PLATFORM_SEED],
+    bump = swap_registry.bump,
     )]
     pub swap_registry: Account<'info, SwapPlatformRegistry>,
 
@@ -36,16 +36,16 @@ pub struct TransferAssetsFromVaultContext<'info> {
     pub signer_token_account: AccountInfo<'info>,
 
     #[account(
-        mut,
-        seeds = [PROPOSAL_SEED, params.proposal_id.as_bytes().as_ref()],
-        bump = swap_proposal.bump,
+    mut,
+    seeds = [PROPOSAL_SEED, params.proposal_id.as_bytes().as_ref()],
+    bump = swap_proposal.bump,
     )]
     pub swap_proposal: Account<'info, SwapProposal>,
 
     #[account(
-        mut,
-        seeds = [TOKEN_ACCOUNT_SEED, mint_account.key().as_ref()],
-        bump = params.swap_token_vault_bump
+    mut,
+    seeds = [TOKEN_ACCOUNT_SEED, mint_account.key().as_ref()],
+    bump = params.swap_token_vault_bump
     )]
     pub swap_token_vault: Account<'info, TokenAccount>,
 
@@ -73,63 +73,80 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
 
     fn redeem(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
         let current_params = params.clone();
-        let swap_proposal = self.swap_proposal.borrow();
 
         // check whether the proposal is still open for redeeming
-        if !swap_proposal.is_proposal_redeemable() {
+        if !self.swap_proposal.is_proposal_redeemable() {
             return Err(SwapError::RedeemIsNotAvailable.into());
         }
+
+        // Check whether the signer is allowed to redeem.
+        if self.swap_proposal.is_proposal_owner(self.signer.key().clone()) {
+            self.transfer_asking_items(
+                current_params.clone(),
+                SwapItemStatus::Redeemed,
+            ).unwrap();
+        }
+
+        if self.swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
+            self.transfer_offered_items(
+                current_params.clone(),
+                SwapItemStatus::Redeemed
+            ).unwrap();
+        }
+
+        // Check and update the final status of the proposal
+        self.swap_proposal.update_redeemed_status().unwrap();
 
         swap_emit!(
             ItemRedeemed {
                 id: params.swap_item_id.clone(),
-                proposal_key: swap_proposal.key().clone(),
+                proposal_key: self.swap_proposal.key().clone(),
                 status: SwapItemStatus::Redeemed,
                 actor: self.signer.key().clone()
             }
         );
 
-        // Check whether the signer is allowed to redeem.
-        if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
-            return self.transfer_asking_items(current_params, SwapItemStatus::Redeemed);
-        }
-
-        if swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
-            return self.transfer_offered_items(current_params, SwapItemStatus::Redeemed);
-        }
-
-        return Err(SwapError::InvalidValue.into());
+        return Ok(());
     }
 
     fn withdraw(&mut self, params: TransferAssetsFromVaultParams) -> Result<()> {
         let current_params = params.clone();
-        let swap_proposal = self.swap_proposal.borrow();
 
         // check whether the proposal is still open for withdrawal
-        if !swap_proposal.is_proposal_withdrawable() {
+        if !self.swap_proposal.is_proposal_withdrawable() {
             return Err(SwapError::WithdrawalIsNotAvailable.into());
         }
+
+        // Check whether the signer is allowed to withdraw.
+        if self.swap_proposal.is_proposal_owner(self.signer.key().clone()) {
+             self.transfer_offered_items(
+                 current_params.clone(),
+                 SwapItemStatus::Withdrawn
+             ).unwrap();
+        }
+
+        if self.swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
+             self.transfer_asking_items(
+                 current_params.clone(),
+                 SwapItemStatus::Withdrawn
+             ).unwrap();
+        }
+
+
+        // Check and update the final status of the proposal
+        self.swap_proposal.update_withdrawn_status().unwrap();
 
         // emit
         swap_emit!(
             ItemWithdrawn {
                 id: params.swap_item_id.clone(),
-                proposal_key: swap_proposal.key().clone(),
+                proposal_key: self.swap_proposal.key().clone(),
                 status: SwapItemStatus::Redeemed,
                 actor: self.signer.key().clone()
             }
         );
 
-        // Check whether the signer is allowed to withdraw.
-        if swap_proposal.is_proposal_owner(self.signer.key().clone()) {
-            return self.transfer_offered_items(current_params, SwapItemStatus::Withdrawn);
-        }
-
-        if swap_proposal.is_fulfilled_participant(self.signer.key().clone()) {
-            return self.transfer_asking_items(current_params, SwapItemStatus::Withdrawn);
-        }
-
-        return Err(SwapError::InvalidValue.into());
+        return Ok(());
     }
 
     fn transfer_asking_items(&mut self, params: TransferAssetsFromVaultParams, desired_item_status: SwapItemStatus) -> Result<()> {
@@ -169,7 +186,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
                     to: self.signer_token_account.to_account_info(),
                     authority: self.swap_registry.to_account_info(),
                 },
-                signer
+                signer,
             ),
             item.amount,
         ).unwrap();
@@ -210,7 +227,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
                     to: self.signer_token_account.to_account_info(),
                     authority: self.swap_registry.to_account_info(),
                 },
-                signer
+                signer,
             ),
             item.amount,
         ).unwrap();

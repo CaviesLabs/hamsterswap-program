@@ -305,6 +305,9 @@ describe("create_proposal", async () => {
 
     // @ts-ignore
     expect(!!state.offeredItems.find(item => !item.status.withdrawn)).to.be.false;
+    // proposal state must be set to withdraw
+    // @ts-ignore
+    expect(!!state.status.withdrawn).to.be.true;
 
     // the proposal owner balance must be debited
     proposalOwnerTokenAccount = await getOrCreateAssociatedTokenAccount(

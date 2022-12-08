@@ -162,7 +162,13 @@ pub enum SwapProposalStatus {
     Fulfilled,
 
     // Declare that the proposal is canceled
-    Canceled
+    Canceled,
+
+    // Declare that the proposal is fully redeemed by both participant and proposal owner
+    Redeemed,
+
+    // Declare that the proposal is fully redeemed by both participant and proposal owner
+    Withdrawn,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
@@ -282,5 +288,71 @@ impl SwapProposal {
     pub fn is_proposal_withdrawable(&self) -> bool {
         return !self.is_proposal_open_for_participants()
             && self.status == SwapProposalStatus::Canceled; // need to be updated once the proposal owner cancel the proposal.
+    }
+
+    // Update redeem status
+    pub fn update_redeemed_status(&mut self) -> Result<()> {
+        let offered_items = &self.offered_items.clone();
+        let fulfilled_option_id = self.fulfilled_with_option_id.clone();
+
+        let fulfilled_option = &self.swap_options
+            .clone()
+            .into_iter()
+            .find(|option| option.id == fulfilled_option_id)
+            .unwrap();
+
+        // all offered items must be redeemed
+        let all_offered_items_redeemed = offered_items
+            .into_iter()
+            .filter(|item| item.status != SwapItemStatus::Redeemed)
+            .count() == 0;
+
+        // all asking items must be redeemed
+        let all_asking_items_redeemed = fulfilled_option.asking_items
+            .clone()
+            .into_iter()
+            .filter(|item| item.status != SwapItemStatus::Redeemed)
+            .count() == 0;
+
+        // update final status for the proposal
+        if all_offered_items_redeemed && all_asking_items_redeemed {
+            self.status = SwapProposalStatus::Redeemed;
+        }
+
+        return Ok(());
+    }
+
+    // Update redeem status
+    pub fn update_withdrawn_status(&mut self) -> Result<()> {
+        let offered_items = &self.offered_items.clone();
+        let mut all_asking_items_withdrawn = true;
+        let fulfilled_option_id = self.fulfilled_with_option_id.clone();
+
+        if fulfilled_option_id != String::default() {
+            let fulfilled_option = &self.swap_options
+                .clone()
+                .into_iter()
+                .find(|option| option.id == fulfilled_option_id)
+                .unwrap();
+
+            // all asking items must be redeemed
+            all_asking_items_withdrawn = fulfilled_option.asking_items.clone()
+                .into_iter()
+                .filter(|item| item.status != SwapItemStatus::Withdrawn)
+                .count() == 0;
+        }
+
+        // all offered items must be redeemed
+        let all_offered_items_withdrawn = offered_items
+            .into_iter()
+            .filter(|item| item.status != SwapItemStatus::Withdrawn)
+            .count() == 0;
+
+        // update final status for the proposal
+        if all_asking_items_withdrawn && all_offered_items_withdrawn {
+            self.status = SwapProposalStatus::Withdrawn;
+        }
+
+        return Ok(());
     }
 }
