@@ -28,18 +28,19 @@ impl<'info> CancelProposalContext<'info> {
     pub fn execute(&mut self, params: CancelProposalParams) -> Result<()> {
         if self.swap_proposal.is_proposal_cancelable_for(&self.signer.key) {
             self.swap_proposal.status = SwapProposalStatus::Canceled;
+
+            // emit event
+            swap_emit!(
+               ProposalCanceled {
+                    actor: self.swap_proposal.owner.key().clone(),
+                    status: SwapProposalStatus::Canceled,
+                    id: self.swap_proposal.id.clone(),
+                    proposal_key: self.swap_proposal.key().clone(),
+                }
+            );
+
             return Ok(());
         }
-
-        // emit event
-        swap_emit!({
-           ProposalCanceled {
-                actor: self.swap_proposal.owner.key().clone(),
-                status: SwapProposalStatus::Canceled,
-                id: self.swap_proposal.id.clone(),
-                proposal_key: self.swap_proposal.key().clone(),
-            }
-        });
 
         // ok
         return Err(SwapError::ProposalCannotBeCanceled.into());
