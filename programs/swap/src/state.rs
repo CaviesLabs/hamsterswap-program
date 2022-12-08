@@ -167,7 +167,7 @@ pub enum SwapProposalStatus {
     // Declare that the proposal is fully redeemed by both participant and proposal owner
     Redeemed,
 
-    // Declare that the proposal is fully redeemed by both participant and proposal owner
+    // Declare that the proposal is fully withdrawn by both participant and proposal owner
     Withdrawn,
 }
 
