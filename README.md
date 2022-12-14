@@ -23,7 +23,7 @@ $ yarn install
 ## Get new address of program
 ```bash
 anchor build
-solana address -k target/deploy/stake-keypair.json
+solana address -k target/deploy/swap-keypair.json
 # above program will output the address of program
 # replace all `EdeRcNsVGU1s1NXZZo8FhLD8iePxvoUCdbvwVGnj778f` with your new address
 ```
