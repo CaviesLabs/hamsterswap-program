@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
-import { BN, BorshCoder, EventParser, Program } from "@project-serum/anchor";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { AnchorError, BN, BorshCoder, EventParser, Program } from "@project-serum/anchor";
+import { PublicKey, Keypair,SendTransactionError } from "@solana/web3.js";
 import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
@@ -63,7 +63,7 @@ describe("update_swap_program", async () => {
 
       throw new Error("Should be failed");
     } catch (e) {
-      expect(!!e).to.be.true;
+      expect(e instanceof AnchorError).to.be.true;
     }
   });
 
@@ -79,7 +79,7 @@ describe("update_swap_program", async () => {
 
       throw new Error("Should be failed");
     } catch (e) {
-      expect(!!e).to.be.true;
+      expect(e instanceof SendTransactionError).to.be.true;
     }
   });
 });

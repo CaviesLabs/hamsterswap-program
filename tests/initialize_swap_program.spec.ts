@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { BN, Program } from "@project-serum/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SendTransactionError } from "@solana/web3.js";
 import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
@@ -54,7 +54,7 @@ describe("initialize_swap_program", async () => {
 
       throw new Error("Should be failed");
     } catch (e) {
-      expect(!!e).to.be.true;
+      expect(e instanceof SendTransactionError).to.be.true;
     }
   });
 });

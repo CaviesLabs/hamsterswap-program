@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { BN, BorshCoder, EventParser, Program, web3 } from "@project-serum/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, SendTransactionError } from "@solana/web3.js";
 import { expect } from "chai";
 import { createMint, getAccount, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
 
@@ -143,7 +143,7 @@ describe("create_proposal", async () => {
 
       throw new Error("Should failed");
     } catch (e) {
-      expect(!!e).to.be.true;
+      expect(e instanceof SendTransactionError).to.be.true;
     }
   });
 

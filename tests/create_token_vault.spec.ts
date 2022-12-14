@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey, SendTransactionError } from "@solana/web3.js";
 import { expect } from "chai";
 
 import { Swap } from "../target/types/swap";
@@ -51,7 +51,7 @@ describe("create_token_vault", async () => {
 
       throw new Error('Failed');
     } catch (e) {
-      expect(!!e).to.be.true;
+      expect(e instanceof SendTransactionError).to.be.true;
     }
   });
 
@@ -85,7 +85,7 @@ describe("create_token_vault", async () => {
 
       throw new Error('Failed');
     } catch (e) {
-      expect(!!e).to.true;
+      expect(e instanceof SendTransactionError).to.be.true;
     }
   });
 });
