@@ -41,11 +41,11 @@ describe("transactionv0_and_lookuptable", async () => {
       9 // decimals
     );
 
-    const recipients1 = new Array(1).fill(0).map(() => Keypair.generate());
-    const recipients2 = new Array(1).fill(0).map(() => Keypair.generate());
-    const recipients3 = new Array(1).fill(0).map(() => Keypair.generate());
-    const recipients4 = new Array(1).fill(0).map(() => Keypair.generate());
-    const recipients5 = new Array(1).fill(0).map(() => Keypair.generate());
+    const recipients1 = new Array(10).fill(0).map(() => Keypair.generate());
+    const recipients2 = new Array(10).fill(0).map(() => Keypair.generate());
+    const recipients3 = new Array(10).fill(0).map(() => Keypair.generate());
+    const recipients4 = new Array(10).fill(0).map(() => Keypair.generate());
+    const recipients5 = new Array(10).fill(0).map(() => Keypair.generate());
     const additional = [{ address: mintableToken }];
 
     /**
