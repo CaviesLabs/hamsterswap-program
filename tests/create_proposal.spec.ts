@@ -316,8 +316,8 @@ describe("create_proposal", async () => {
           optionId: "",
         };
 
-        // @ts-ignore
         return program.methods
+          // @ts-ignore
           .transferAssetsToVault(params)
           .accounts({
             signer: proposalOwner.publicKey,
@@ -383,8 +383,8 @@ describe("create_proposal", async () => {
           actionType: { withdrawing: {} },
         };
 
-        // @ts-ignore
         return program.methods
+          // @ts-ignore
           .transferAssetsFromVault(params)
           .accounts({
             signer: proposalOwner.publicKey,
