@@ -3,7 +3,7 @@ import {
   Keypair,
   TransactionInstruction,
   TransactionMessage,
-  VersionedTransaction
+  VersionedTransaction,
 } from "@solana/web3.js";
 import type { AnchorProvider } from "@project-serum/anchor/dist/cjs/provider";
 
@@ -24,18 +24,23 @@ export class V0transactionProvider {
     const lookupMessage = new TransactionMessage({
       payerKey: signer.publicKey,
       recentBlockhash: latestBlockHash.blockhash,
-      instructions: instructions
+      instructions: instructions,
     }).compileToV0Message();
 
     const lookupTransaction = new VersionedTransaction(lookupMessage);
     lookupTransaction.sign([signer]);
 
-    const txid = await provider.connection.sendRawTransaction(lookupTransaction.serialize());
-    return provider.connection.confirmTransaction({
-      signature: txid,
-      blockhash: latestBlockHash.blockhash,
-      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight
-    }, "finalized");
+    const txid = await provider.connection.sendRawTransaction(
+      lookupTransaction.serialize()
+    );
+    return provider.connection.confirmTransaction(
+      {
+        signature: txid,
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      },
+      "finalized"
+    );
   }
 
   /**
@@ -55,17 +60,22 @@ export class V0transactionProvider {
     const lookupMessage = new TransactionMessage({
       payerKey: signer.publicKey,
       recentBlockhash: latestBlockHash.blockhash,
-      instructions: instructions
+      instructions: instructions,
     }).compileToV0Message(lookupTableAccounts);
 
     const lookupTransaction = new VersionedTransaction(lookupMessage);
     lookupTransaction.sign([signer]);
 
-    const txid = await provider.connection.sendRawTransaction(lookupTransaction.serialize());
-    return provider.connection.confirmTransaction({
-      signature: txid,
-      blockhash: latestBlockHash.blockhash,
-      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight
-    }, "confirmed");
+    const txid = await provider.connection.sendRawTransaction(
+      lookupTransaction.serialize()
+    );
+    return provider.connection.confirmTransaction(
+      {
+        signature: txid,
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      },
+      "confirmed"
+    );
   }
 }

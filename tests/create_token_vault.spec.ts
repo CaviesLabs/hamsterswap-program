@@ -16,9 +16,10 @@ describe("create_token_vault", async () => {
   const otherUser = Keypair.generate();
 
   // find the swap account
-  const [swapRegistry] = await PublicKey.findProgramAddress([
-    anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")
-  ], program.programId);
+  const [swapRegistry] = await PublicKey.findProgramAddress(
+    [anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")],
+    program.programId
+  );
 
   let mintNormalPublicKey;
   let swapTokenVault;
@@ -33,23 +34,30 @@ describe("create_token_vault", async () => {
       8 // decimals
     );
 
-    [swapTokenVault] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
-      mintNormalPublicKey.toBytes()
-    ], program.programId);
+    [swapTokenVault] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
+        mintNormalPublicKey.toBytes(),
+      ],
+      program.programId
+    );
   });
 
   it("[create_token_vault] should: non-deployer fails to create a token vault", async () => {
     try {
       // create the token vault
-      await program.methods.createTokenVault().accounts({
-        mintAccount: mintNormalPublicKey,
-        swapRegistry,
-        swapTokenVault,
-        signer: otherUser.publicKey
-      }).signers([otherUser]).rpc({ commitment: "confirmed" });
+      await program.methods
+        .createTokenVault()
+        .accounts({
+          mintAccount: mintNormalPublicKey,
+          swapRegistry,
+          swapTokenVault,
+          signer: otherUser.publicKey,
+        })
+        .signers([otherUser])
+        .rpc({ commitment: "confirmed" });
 
-      throw new Error('Failed');
+      throw new Error("Failed");
     } catch (e) {
       expect(e instanceof SendTransactionError).to.be.true;
     }
@@ -57,33 +65,45 @@ describe("create_token_vault", async () => {
 
   it("[create_token_vault] should: deployer creates a token vault successfully", async () => {
     // create the token vault
-    await program.methods.createTokenVault().accounts({
-      mintAccount: mintNormalPublicKey,
-      swapRegistry,
-      swapTokenVault,
-      signer: deployer.publicKey
-    }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+    await program.methods
+      .createTokenVault()
+      .accounts({
+        mintAccount: mintNormalPublicKey,
+        swapRegistry,
+        swapTokenVault,
+        signer: deployer.publicKey,
+      })
+      .signers([deployer.payer])
+      .rpc({ commitment: "confirmed" });
 
     // check the state
-    const state = await program.account.swapPlatformRegistry.fetch(swapRegistry);
+    const state = await program.account.swapPlatformRegistry.fetch(
+      swapRegistry
+    );
     // @ts-ignore
     expect(state.allowedMintAccounts.length).equals(1);
     expect(state.allowedMintAccounts[0].isEnabled).equals(true);
-    expect(state.allowedMintAccounts[0].mintAccount.equals(mintNormalPublicKey)).equals(true);
+    expect(
+      state.allowedMintAccounts[0].mintAccount.equals(mintNormalPublicKey)
+    ).equals(true);
     expect(!!state.allowedMintAccounts[0].tokenAccount).to.be.true;
   });
 
   it("[create_token_vault] should: deployer fails to create a token vault for an added mint account", async () => {
     try {
       // create the token vault
-      await program.methods.createTokenVault().accounts({
-        mintAccount: mintNormalPublicKey,
-        swapRegistry,
-        swapTokenVault,
-        signer: deployer.publicKey
-      }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+      await program.methods
+        .createTokenVault()
+        .accounts({
+          mintAccount: mintNormalPublicKey,
+          swapRegistry,
+          swapTokenVault,
+          signer: deployer.publicKey,
+        })
+        .signers([deployer.payer])
+        .rpc({ commitment: "confirmed" });
 
-      throw new Error('Failed');
+      throw new Error("Failed");
     } catch (e) {
       expect(e instanceof SendTransactionError).to.be.true;
     }

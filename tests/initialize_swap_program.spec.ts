@@ -14,20 +14,25 @@ describe("initialize_swap_program", async () => {
   const deployer = provider.wallet as anchor.Wallet;
 
   // find the swap account
-  const [swapAccount] = await PublicKey.findProgramAddress([
-    anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM"),
-  ], program.programId);
+  const [swapAccount] = await PublicKey.findProgramAddress(
+    [anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")],
+    program.programId
+  );
 
   before(async () => {
-      // Initialize first
-      await program.methods.initialize({
+    // Initialize first
+    await program.methods
+      .initialize({
         maxAllowedItems: new BN(5).toNumber(),
         maxAllowedOptions: new BN(5).toNumber(),
-      }).accounts({
+      })
+      .accounts({
         swapRegistry: swapAccount,
-        owner: deployer.publicKey
-      }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
-  })
+        owner: deployer.publicKey,
+      })
+      .signers([deployer.payer])
+      .rpc({ commitment: "confirmed" });
+  });
 
   it("[initialize_swap_program] should: deployer initializes swap registry successfully", async () => {
     const state = await program.account.swapPlatformRegistry.fetch(swapAccount);
@@ -44,13 +49,17 @@ describe("initialize_swap_program", async () => {
 
   it("[initialize_swap_program] should: deployer fails to re-initialize the swap registry", async () => {
     try {
-      await program.methods.initialize({
-        maxAllowedItems: new BN(6).toNumber(),
-        maxAllowedOptions: new BN(5).toNumber(),
-      }).accounts({
-        swapRegistry: swapAccount,
-        owner: deployer.publicKey
-      }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+      await program.methods
+        .initialize({
+          maxAllowedItems: new BN(6).toNumber(),
+          maxAllowedOptions: new BN(5).toNumber(),
+        })
+        .accounts({
+          swapRegistry: swapAccount,
+          owner: deployer.publicKey,
+        })
+        .signers([deployer.payer])
+        .rpc({ commitment: "confirmed" });
 
       throw new Error("Should be failed");
     } catch (e) {

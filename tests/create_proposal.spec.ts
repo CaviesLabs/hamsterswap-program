@@ -1,8 +1,19 @@
 import * as anchor from "@project-serum/anchor";
-import { BN, BorshCoder, EventParser, Program, web3 } from "@project-serum/anchor";
+import {
+  BN,
+  BorshCoder,
+  EventParser,
+  Program,
+  web3,
+} from "@project-serum/anchor";
 import { Keypair, PublicKey, SendTransactionError } from "@solana/web3.js";
 import { expect } from "chai";
-import { createMint, getAccount, getOrCreateAssociatedTokenAccount, mintTo } from "@solana/spl-token";
+import {
+  createMint,
+  getAccount,
+  getOrCreateAssociatedTokenAccount,
+  mintTo,
+} from "@solana/spl-token";
 
 import { Swap } from "../target/types/swap";
 
@@ -15,9 +26,10 @@ describe("create_proposal", async () => {
   const deployer = provider.wallet as anchor.Wallet;
 
   // find the swap account
-  const [swapRegistry, swapRegistryBump] = await PublicKey.findProgramAddress([
-    anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")
-  ], program.programId);
+  const [swapRegistry, swapRegistryBump] = await PublicKey.findProgramAddress(
+    [anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")],
+    program.programId
+  );
 
   let mintNormalPublicKey;
   let swapTokenVault;
@@ -39,29 +51,40 @@ describe("create_proposal", async () => {
       deployer.publicKey, // freeze authority (you can use `null` to disable it. when you disable it, you can't turn it on again)
       8 // decimals
     );
-    [swapTokenVault] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
-      mintNormalPublicKey.toBytes()
-    ], program.programId);
+    [swapTokenVault] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
+        mintNormalPublicKey.toBytes(),
+      ],
+      program.programId
+    );
 
     // Construct accounts for proposal creation
     proposalOwner = Keypair.generate();
     participant = Keypair.generate();
 
     // funding proposal owner
-    const airdropSignature = await provider.connection.requestAirdrop(proposalOwner.publicKey, web3.LAMPORTS_PER_SOL);
+    const airdropSignature = await provider.connection.requestAirdrop(
+      proposalOwner.publicKey,
+      web3.LAMPORTS_PER_SOL
+    );
     await provider.connection.confirmTransaction({
       signature: airdropSignature,
       blockhash: (await provider.connection.getLatestBlockhash()).blockhash,
-      lastValidBlockHeight: ((await provider.connection.getLatestBlockhash())).lastValidBlockHeight
+      lastValidBlockHeight: (
+        await provider.connection.getLatestBlockhash()
+      ).lastValidBlockHeight,
     });
 
     // Now to create the proposal
     proposalId = Keypair.generate().publicKey.toBase58().slice(0, 10);
-    [swapProposal] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
-      anchor.utils.bytes.utf8.encode(proposalId)
-    ], program.programId);
+    [swapProposal] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
+        anchor.utils.bytes.utf8.encode(proposalId),
+      ],
+      program.programId
+    );
 
     proposalOwnerTokenAccount = await getOrCreateAssociatedTokenAccount(
       provider.connection,
@@ -79,67 +102,87 @@ describe("create_proposal", async () => {
       web3.LAMPORTS_PER_SOL * 100
     );
 
-    [swapTokenVault, swapTokenVaultBump] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
-      mintNormalPublicKey.toBytes()
-    ], program.programId);
+    [swapTokenVault, swapTokenVaultBump] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("SEED::SWAP::TOKEN_VAULT_SEED"),
+        mintNormalPublicKey.toBytes(),
+      ],
+      program.programId
+    );
 
-    offeredItems = [{
-      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
-      mintAccount: mintNormalPublicKey,
-      amount: new BN(web3.LAMPORTS_PER_SOL),
-      itemType: {currency: {}}
-    },
+    offeredItems = [
       {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
         amount: new BN(web3.LAMPORTS_PER_SOL),
-        itemType: {currency: {}}
-      }];
-    swapOptions = [{
-      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
-      askingItems: [{
+        itemType: { currency: {} },
+      },
+      {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
         mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
-        itemType: {currency: {}}
-      }, {
+        amount: new BN(web3.LAMPORTS_PER_SOL),
+        itemType: { currency: {} },
+      },
+    ];
+    swapOptions = [
+      {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
-        mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
-        itemType: {nft: {}}
-      }]
-    }, {
-      id: Keypair.generate().publicKey.toBase58().slice(0, 10),
-      askingItems: [{
+        askingItems: [
+          {
+            id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+            mintAccount: mintNormalPublicKey,
+            amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+            itemType: { currency: {} },
+          },
+          {
+            id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+            mintAccount: mintNormalPublicKey,
+            amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+            itemType: { nft: {} },
+          },
+        ],
+      },
+      {
         id: Keypair.generate().publicKey.toBase58().slice(0, 10),
-        mintAccount: mintNormalPublicKey,
-        amount: new BN(web3.LAMPORTS_PER_SOL * 4),
-        itemType: {nft: {}}
-      }]
-    }];
+        askingItems: [
+          {
+            id: Keypair.generate().publicKey.toBase58().slice(0, 10),
+            mintAccount: mintNormalPublicKey,
+            amount: new BN(web3.LAMPORTS_PER_SOL * 4),
+            itemType: { nft: {} },
+          },
+        ],
+      },
+    ];
   });
 
   it("[create_proposal] should: fail to create proposal with un-allowed mint tokens", async () => {
     // Now to create the proposal
     const id = Keypair.generate().publicKey.toBase58().slice(0, 10);
-    const [swapProposal] = await PublicKey.findProgramAddress([
-      anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
-      anchor.utils.bytes.utf8.encode(id)
-    ], program.programId);
+    const [swapProposal] = await PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("SEED::SWAP::PROPOSAL_SEED"),
+        anchor.utils.bytes.utf8.encode(id),
+      ],
+      program.programId
+    );
 
     try {
       // Send RPC request to blockchain.
-      await program.methods.createProposal({
-        id,
-        swapOptions,
-        offeredItems,
-        expiredAt: new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7)
-      }).accounts({
-        proposalOwner: proposalOwner.publicKey,
-        swapRegistry,
-        swapProposal: swapProposal
-      }).signers([proposalOwner]).rpc({ commitment: "confirmed" });
+      await program.methods
+        .createProposal({
+          id,
+          swapOptions,
+          offeredItems,
+          expiredAt: new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7),
+        })
+        .accounts({
+          proposalOwner: proposalOwner.publicKey,
+          swapRegistry,
+          swapProposal: swapProposal,
+        })
+        .signers([proposalOwner])
+        .rpc({ commitment: "confirmed" });
 
       throw new Error("Should failed");
     } catch (e) {
@@ -149,28 +192,35 @@ describe("create_proposal", async () => {
 
   it("[create_proposal] should: everyone can create publicly a proposal", async () => {
     // now we whitelist the token first
-    await program.methods.createTokenVault().accounts({
-      mintAccount: mintNormalPublicKey,
-      swapRegistry,
-      swapTokenVault,
-      signer: deployer.publicKey
-    }).signers([deployer.payer]).rpc({ commitment: "confirmed" });
+    await program.methods
+      .createTokenVault()
+      .accounts({
+        mintAccount: mintNormalPublicKey,
+        swapRegistry,
+        swapTokenVault,
+        signer: deployer.publicKey,
+      })
+      .signers([deployer.payer])
+      .rpc({ commitment: "confirmed" });
 
     // Construct data to be sent over the RPC.
     const expiredAt = new BN(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
 
-
     // Send RPC request to blockchain.
-    const tx = await program.methods.createProposal({
-      id: proposalId,
-      swapOptions,
-      offeredItems,
-      expiredAt
-    }).accounts({
-      proposalOwner: proposalOwner.publicKey,
-      swapRegistry,
-      swapProposal: swapProposal
-    }).signers([proposalOwner]).rpc({ commitment: "confirmed" });
+    const tx = await program.methods
+      .createProposal({
+        id: proposalId,
+        swapOptions,
+        offeredItems,
+        expiredAt,
+      })
+      .accounts({
+        proposalOwner: proposalOwner.publicKey,
+        swapRegistry,
+        swapProposal: swapProposal,
+      })
+      .signers([proposalOwner])
+      .rpc({ commitment: "confirmed" });
 
     // now we verify the state
     const state = await program.account.swapProposal.fetch(swapProposal);
@@ -183,8 +233,10 @@ describe("create_proposal", async () => {
     // @ts-ignore
     expect(state.offeredItems.length).eq(2);
     expect(state.offeredItems[0].id === offeredItems[0].id).to.be.true;
-    expect(state.offeredItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
-    expect(state.offeredItems[0].amount.eq(new BN(web3.LAMPORTS_PER_SOL))).to.be.true;
+    expect(state.offeredItems[0].mintAccount.equals(mintNormalPublicKey)).to.be
+      .true;
+    expect(state.offeredItems[0].amount.eq(new BN(web3.LAMPORTS_PER_SOL))).to.be
+      .true;
     expect(!!state.offeredItems[0].status.created).to.be.true;
 
     // @ts-ignore
@@ -192,28 +244,61 @@ describe("create_proposal", async () => {
     expect(state.swapOptions[0].id).eq(swapOptions[0].id);
     expect(state.swapOptions[0].askingItems.length).eq(2);
 
-    expect(state.swapOptions[0].askingItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
-    expect(state.swapOptions[0].askingItems[0].amount.eq(new BN(web3.LAMPORTS_PER_SOL * 4))).to.be.true;
+    expect(
+      state.swapOptions[0].askingItems[0].mintAccount.equals(
+        mintNormalPublicKey
+      )
+    ).to.be.true;
+    expect(
+      state.swapOptions[0].askingItems[0].amount.eq(
+        new BN(web3.LAMPORTS_PER_SOL * 4)
+      )
+    ).to.be.true;
     expect(!!state.swapOptions[0].askingItems[0].status.created).to.be.true;
 
-    expect(state.swapOptions[0].askingItems[1].mintAccount.equals(mintNormalPublicKey)).to.be.true;
-    expect(state.swapOptions[0].askingItems[1].amount.eq(new BN(web3.LAMPORTS_PER_SOL * 4))).to.be.true;
+    expect(
+      state.swapOptions[0].askingItems[1].mintAccount.equals(
+        mintNormalPublicKey
+      )
+    ).to.be.true;
+    expect(
+      state.swapOptions[0].askingItems[1].amount.eq(
+        new BN(web3.LAMPORTS_PER_SOL * 4)
+      )
+    ).to.be.true;
     expect(!!state.swapOptions[0].askingItems[1].status.created).to.be.true;
 
     expect(state.swapOptions[1].id).eq(swapOptions[1].id);
     expect(state.swapOptions[1].askingItems.length).eq(1);
-    expect(state.swapOptions[1].askingItems[0].mintAccount.equals(mintNormalPublicKey)).to.be.true;
-    expect(state.swapOptions[1].askingItems[0].amount.eq(new BN(web3.LAMPORTS_PER_SOL * 4))).to.be.true;
+    expect(
+      state.swapOptions[1].askingItems[0].mintAccount.equals(
+        mintNormalPublicKey
+      )
+    ).to.be.true;
+    expect(
+      state.swapOptions[1].askingItems[0].amount.eq(
+        new BN(web3.LAMPORTS_PER_SOL * 4)
+      )
+    ).to.be.true;
     expect(!!state.swapOptions[1].askingItems[0].status.created).to.be.true;
 
     // expect log
-    const transaction = await provider.connection.getParsedTransaction(tx, { commitment: "confirmed" });
-    const eventParser = new EventParser(program.programId, new BorshCoder(program.idl));
+    const transaction = await provider.connection.getParsedTransaction(tx, {
+      commitment: "confirmed",
+    });
+    const eventParser = new EventParser(
+      program.programId,
+      new BorshCoder(program.idl)
+    );
     const [event] = eventParser.parseLogs(transaction.meta.logMessages);
 
     // Expect emitted logs
-    expect(event.data.actor.toString() === proposalOwner.publicKey.toString()).equals(true);
-    expect(event.data.proposalKey.toString() === swapProposal.toString()).equals(true);
+    expect(
+      event.data.actor.toString() === proposalOwner.publicKey.toString()
+    ).equals(true);
+    expect(
+      event.data.proposalKey.toString() === swapProposal.toString()
+    ).equals(true);
     expect(event.data.id).equals(proposalId);
     // @ts-ignore
     expect(event.data.expiredAt.eq(new BN(expiredAt))).to.be.true;
@@ -228,18 +313,23 @@ describe("create_proposal", async () => {
           swapItemId: item.id,
           swapTokenVaultBump,
           actionType: { depositing: {} },
-          optionId: ""
+          optionId: "",
         };
 
         // @ts-ignore
-        return program.methods.transferAssetsToVault(params).accounts({
-          signer: proposalOwner.publicKey,
-          signerTokenAccount: proposalOwnerTokenAccount.address,
-          swapProposal,
-          swapTokenVault,
-          mintAccount: mintNormalPublicKey
-        }).signers([proposalOwner]).instruction();
-      }));
+        return program.methods
+          .transferAssetsToVault(params)
+          .accounts({
+            signer: proposalOwner.publicKey,
+            signerTokenAccount: proposalOwnerTokenAccount.address,
+            swapProposal,
+            swapTokenVault,
+            mintAccount: mintNormalPublicKey,
+          })
+          .signers([proposalOwner])
+          .instruction();
+      })
+    );
 
     const transaction = new web3.Transaction();
     transaction.add(...depositInstructions);
@@ -253,20 +343,28 @@ describe("create_proposal", async () => {
       mintNormalPublicKey,
       proposalOwner.publicKey
     );
-    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 98);
+    expect(Number(proposalOwnerTokenAccount.amount)).eq(
+      web3.LAMPORTS_PER_SOL * 98
+    );
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(
       provider.connection,
       swapTokenVault
     );
-    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 2);
+    expect(Number(proposalTokenVaultAccount.amount)).eq(
+      web3.LAMPORTS_PER_SOL * 2
+    );
 
     // now we cancel the program
-    const response = await program.methods.cancelProposal({ id: proposalId }).accounts({
-      swapProposal,
-      signer: proposalOwner.publicKey
-    }).signers([proposalOwner]).rpc({ commitment: "confirmed" });
+    const response = await program.methods
+      .cancelProposal({ id: proposalId })
+      .accounts({
+        swapProposal,
+        signer: proposalOwner.publicKey,
+      })
+      .signers([proposalOwner])
+      .rpc({ commitment: "confirmed" });
     expect(!!response).to.be.true;
     const state = await program.account.swapProposal.fetch(swapProposal);
     expect(state.id).eq(proposalId);
@@ -282,19 +380,24 @@ describe("create_proposal", async () => {
           swapItemId: item.id,
           swapRegistryBump,
           swapTokenVaultBump,
-          actionType: { withdrawing: {} }
+          actionType: { withdrawing: {} },
         };
 
         // @ts-ignore
-        return program.methods.transferAssetsFromVault(params).accounts({
-          signer: proposalOwner.publicKey,
-          signerTokenAccount: proposalOwnerTokenAccount.address,
-          swapProposal,
-          swapTokenVault,
-          swapRegistry,
-          mintAccount: mintNormalPublicKey
-        }).signers([proposalOwner]).instruction();
-      }));
+        return program.methods
+          .transferAssetsFromVault(params)
+          .accounts({
+            signer: proposalOwner.publicKey,
+            signerTokenAccount: proposalOwnerTokenAccount.address,
+            swapProposal,
+            swapTokenVault,
+            swapRegistry,
+            mintAccount: mintNormalPublicKey,
+          })
+          .signers([proposalOwner])
+          .instruction();
+      })
+    );
 
     const transaction = new web3.Transaction();
     transaction.add(...fulfillingInstructions);
@@ -304,7 +407,8 @@ describe("create_proposal", async () => {
     const state = await program.account.swapProposal.fetch(swapProposal);
 
     // @ts-ignore
-    expect(!!state.offeredItems.find(item => !item.status.withdrawn)).to.be.false;
+    expect(!!state.offeredItems.find((item) => !item.status.withdrawn)).to.be
+      .false;
     // proposal state must be set to withdraw
     // @ts-ignore
     expect(!!state.status.withdrawn).to.be.true;
@@ -316,13 +420,17 @@ describe("create_proposal", async () => {
       mintNormalPublicKey,
       proposalOwner.publicKey
     );
-    expect(Number(proposalOwnerTokenAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 100);
+    expect(Number(proposalOwnerTokenAccount.amount)).eq(
+      web3.LAMPORTS_PER_SOL * 100
+    );
 
     // the proposal balance must be credited
     const proposalTokenVaultAccount = await getAccount(
       provider.connection,
       swapTokenVault
     );
-    expect(Number(proposalTokenVaultAccount.amount)).eq(web3.LAMPORTS_PER_SOL * 0);
+    expect(Number(proposalTokenVaultAccount.amount)).eq(
+      web3.LAMPORTS_PER_SOL * 0
+    );
   });
 });
