@@ -89,7 +89,7 @@ describe("transactionv0_and_lookuptable", async () => {
     /**
      * @dev Create lookup table first
      */
-    const [lookupTableInst, lookupTableAddress] =
+    let [lookupTableInst, lookupTableAddress] =
       AddressLookupTableProgram.createLookupTable({
         authority: deployer.publicKey,
         payer: deployer.publicKey,
