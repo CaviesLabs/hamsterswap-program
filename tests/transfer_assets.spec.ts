@@ -391,7 +391,6 @@ describe("transfer_assets", async () => {
         const params = {
           proposalId,
           swapItemId: item.id,
-          swapRegistryBump,
           swapTokenVaultBump,
           actionType: { redeeming: {} },
         };
@@ -455,7 +454,6 @@ describe("transfer_assets", async () => {
         const params = {
           proposalId,
           swapItemId: item.id,
-          swapRegistryBump,
           swapTokenVaultBump,
           actionType: { redeeming: {} },
         };

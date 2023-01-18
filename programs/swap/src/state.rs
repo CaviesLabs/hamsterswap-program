@@ -1,5 +1,6 @@
 use crate::*;
 use std::borrow::Borrow;
+use solana_address_lookup_table_program::state::AddressLookupTable;
 
 // ================ Swap Platform Config ================ //
 // Here we define the account state that holds the administration info.
@@ -32,6 +33,9 @@ pub struct SwapPlatformRegistry {
 
     // define whitelisted mint token account
     pub allowed_mint_accounts: Vec<MintInfo>,
+
+    // Define the lookup table for the whole program
+    pub address_lookup_table: Vec<Pubkey>
 }
 
 // Define handler

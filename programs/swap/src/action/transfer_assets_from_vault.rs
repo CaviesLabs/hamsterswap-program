@@ -10,7 +10,6 @@ pub enum TransferActionType {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Default, Clone, Debug, PartialEq)]
 pub struct TransferAssetsFromVaultParams {
-    pub swap_registry_bump: u8,
     pub swap_token_vault_bump: u8,
     pub proposal_id: String,
     pub action_type: TransferActionType,
@@ -171,7 +170,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         }
 
         // find the bump to sign with the pda
-        let bump = &[params.swap_registry_bump][..];
+        let bump = &[self.swap_registry.bump][..];
         let signer = token_account_signer!(
             PLATFORM_SEED,
             bump
@@ -212,7 +211,7 @@ impl<'info> TransferAssetsFromVaultContext<'info> {
         }
 
         // find the bump to sign with the pda
-        let bump = &[params.swap_registry_bump][..];
+        let bump = &[self.swap_registry.bump][..];
         let signer = token_account_signer!(
             PLATFORM_SEED,
             bump

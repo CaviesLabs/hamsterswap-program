@@ -3,6 +3,8 @@ use crate::*;
 #[error_code]
 pub enum SwapError {
     // System error
+    #[msg("System error")]
+    SystemError,
     #[msg("The program was already initialized")]
     AlreadyInitialized,
     #[msg("The mint account was existed")]

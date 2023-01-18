@@ -1,8 +1,10 @@
+use std::borrow::BorrowMut;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{system_program, sysvar};
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use arrayref::array_ref;
+use solana_address_lookup_table_program::*;
 
 pub mod action;
 pub mod error;
@@ -25,7 +27,10 @@ pub mod swap {
     use super::*;
 
     // Initialize contract once
-    pub fn initialize(ctx: Context<InitializeSwapPlatformContext>, params: InitializeSwapPlatformParams) -> Result<()> {
+    pub fn initialize(
+        ctx: Context<InitializeSwapPlatformContext>,
+        params: InitializeSwapPlatformParams
+    ) -> Result<()> {
         // process
         ctx.accounts.execute(
             params,
@@ -37,7 +42,10 @@ pub mod swap {
     }
 
     // Deployer can update swap config later
-    pub fn update_swap_registry(ctx: Context<UpdateSwapPlatformContext>, params: UpdateSwapPlatformParams) -> Result<()> {
+    pub fn update_swap_registry(
+        ctx: Context<UpdateSwapPlatformContext>,
+        params: UpdateSwapPlatformParams
+    ) -> Result<()> {
         // execute with context
         ctx.accounts.execute(params).unwrap();
 
@@ -46,7 +54,9 @@ pub mod swap {
     }
 
     // Create proposal, public to anyone
-    pub fn create_token_vault(ctx: Context<CreateTokenVaultContext>) -> Result<()> {
+    pub fn create_token_vault(
+        ctx: Context<CreateTokenVaultContext>
+    ) -> Result<()> {
         ctx.accounts.execute(
             *ctx.bumps.get("swap_token_vault").unwrap(),
         ).unwrap();
@@ -55,7 +65,10 @@ pub mod swap {
     }
 
     // Create proposal, public to anyone
-    pub fn create_proposal(ctx: Context<CreateProposalContext>, params: CreateProposalParams) -> Result<()> {
+    pub fn create_proposal(
+        ctx: Context<CreateProposalContext>,
+        params: CreateProposalParams
+    ) -> Result<()> {
         ctx.accounts.execute(
             params,
             *ctx.bumps.get("swap_proposal").unwrap(),
@@ -65,20 +78,39 @@ pub mod swap {
     }
 
     // Create proposal, public to anyone
-    pub fn cancel_proposal(ctx: Context<CancelProposalContext>, params: CancelProposalParams) -> Result<()> {
+    pub fn cancel_proposal(
+        ctx: Context<CancelProposalContext>,
+        params: CancelProposalParams
+    ) -> Result<()> {
         ctx.accounts.execute(params).unwrap();
         Ok(())
     }
 
     // Deposit or fulfilling the proposal
-    pub fn transfer_assets_to_vault(ctx: Context<TransferAssetsToVaultContext>, params: TransferAssetsToVaultParams) -> Result<()> {
+    pub fn transfer_assets_to_vault(
+        ctx: Context<TransferAssetsToVaultContext>,
+        params: TransferAssetsToVaultParams
+    ) -> Result<()> {
         ctx.accounts.execute(params).unwrap();
 
         Ok(())
     }
 
     // Withdrawing or redeeming the proposal
-    pub fn transfer_assets_from_vault(ctx: Context<TransferAssetsFromVaultContext>, params: TransferAssetsFromVaultParams) -> Result<()> {
+    pub fn transfer_assets_from_vault(
+        ctx: Context<TransferAssetsFromVaultContext>,
+        params: TransferAssetsFromVaultParams
+    ) -> Result<()> {
+        ctx.accounts.execute(params).unwrap();
+
+        Ok(())
+    }
+
+    // modify address lookup table
+    pub fn modify_address_lookup_table(
+        ctx: Context<ModifyAddressLookupTableContext>,
+        params: ModifyAddressLookupTableParams
+    ) -> Result<()> {
         ctx.accounts.execute(params).unwrap();
 
         Ok(())
