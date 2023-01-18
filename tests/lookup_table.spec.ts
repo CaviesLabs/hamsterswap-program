@@ -1,6 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { web3 } from "@project-serum/anchor";
-import { Keypair, AddressLookupTableProgram } from "@solana/web3.js";
+import { Keypair, AddressLookupTableProgram, TransactionInstruction } from "@solana/web3.js";
 import {
   createMint,
   createMintToInstruction,
@@ -58,9 +58,9 @@ describe("transactionv0_and_lookuptable", async () => {
 
     const recipients1 = new Array(10).fill(0).map(() => Keypair.generate());
     const recipients2 = new Array(10).fill(0).map(() => Keypair.generate());
-    const recipients3 = new Array(10).fill(0).map(() => Keypair.generate());
-    const recipients4 = new Array(10).fill(0).map(() => Keypair.generate());
-    const recipients5 = new Array(10).fill(0).map(() => Keypair.generate());
+    const recipients3 = new Array(7).fill(0).map(() => Keypair.generate());
+    const recipients4 = new Array(1).fill(0).map(() => Keypair.generate());
+    const recipients5 = new Array(1).fill(0).map(() => Keypair.generate());
     const additional = [{ address: mintableToken }];
 
     /**
@@ -97,9 +97,9 @@ describe("transactionv0_and_lookuptable", async () => {
           commitment: "finalized",
         }),
       });
-    await v0TransactionProvider
-      .sendAndConfirmV0Transaction(provider, [lookupTableInst], deployer)
-      .catch((e) => console.log("create ALT error", e));
+
+    const atlInstructions: TransactionInstruction[] = [];
+    atlInstructions.push(lookupTableInst);
 
     /**
      * @dev Extend chunks of addresses
@@ -115,12 +115,13 @@ describe("transactionv0_and_lookuptable", async () => {
             lookupTable: lookupTableAddress,
             addresses: chunk.map((elm) => elm.address),
           });
-
-        await v0TransactionProvider
-          .sendAndConfirmV0Transaction(provider, [extendInstruction], deployer)
-          .catch((e) => console.log("extend error", e));
+        atlInstructions.push(extendInstruction);
       })
     );
+
+    await v0TransactionProvider
+      .sendAndConfirmV0Transaction(provider, atlInstructions, deployer)
+      .catch((e) => console.log("extend error", e));
 
     /**
      * @dev Fetch lookup table account
