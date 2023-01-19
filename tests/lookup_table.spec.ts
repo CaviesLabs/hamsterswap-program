@@ -1,6 +1,10 @@
 import * as anchor from "@project-serum/anchor";
 import { web3 } from "@project-serum/anchor";
-import { Keypair, AddressLookupTableProgram, TransactionInstruction } from "@solana/web3.js";
+import {
+  Keypair,
+  AddressLookupTableProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import {
   createMint,
   createMintToInstruction,

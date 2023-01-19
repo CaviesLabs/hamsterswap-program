@@ -316,18 +316,20 @@ describe("create_proposal", async () => {
           optionId: "",
         };
 
-        return program.methods
-          // @ts-ignore
-          .transferAssetsToVault(params)
-          .accounts({
-            signer: proposalOwner.publicKey,
-            signerTokenAccount: proposalOwnerTokenAccount.address,
-            swapProposal,
-            swapTokenVault,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([proposalOwner])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsToVault(params)
+            .accounts({
+              signer: proposalOwner.publicKey,
+              signerTokenAccount: proposalOwnerTokenAccount.address,
+              swapProposal,
+              swapTokenVault,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([proposalOwner])
+            .instruction()
+        );
       })
     );
 
@@ -383,19 +385,21 @@ describe("create_proposal", async () => {
           actionType: { withdrawing: {} },
         };
 
-        return program.methods
-          // @ts-ignore
-          .transferAssetsFromVault(params)
-          .accounts({
-            signer: proposalOwner.publicKey,
-            signerTokenAccount: proposalOwnerTokenAccount.address,
-            swapProposal,
-            swapTokenVault,
-            swapRegistry,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([proposalOwner])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsFromVault(params)
+            .accounts({
+              signer: proposalOwner.publicKey,
+              signerTokenAccount: proposalOwnerTokenAccount.address,
+              swapProposal,
+              swapTokenVault,
+              swapRegistry,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([proposalOwner])
+            .instruction()
+        );
       })
     );
 

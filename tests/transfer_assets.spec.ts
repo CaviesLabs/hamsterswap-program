@@ -224,18 +224,20 @@ describe("transfer_assets", async () => {
           actionType: { depositing: {} },
           optionId: "",
         };
-        return program.methods
-          // @ts-ignore
-          .transferAssetsToVault(params)
-          .accounts({
-            signer: proposalOwner.publicKey,
-            signerTokenAccount: proposalOwnerTokenAccount.address,
-            swapProposal,
-            swapTokenVault,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([proposalOwner])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsToVault(params)
+            .accounts({
+              signer: proposalOwner.publicKey,
+              signerTokenAccount: proposalOwnerTokenAccount.address,
+              swapProposal,
+              swapTokenVault,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([proposalOwner])
+            .instruction()
+        );
       })
     );
 
@@ -320,18 +322,20 @@ describe("transfer_assets", async () => {
           actionType: { fulfilling: {} },
           optionId: swapOption.id,
         };
-        return program.methods
-          // @ts-ignore
-          .transferAssetsToVault(params)
-          .accounts({
-            signerTokenAccount: participantTokenAccount.address,
-            signer: participant.publicKey,
-            swapProposal,
-            swapTokenVault,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([participant])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsToVault(params)
+            .accounts({
+              signerTokenAccount: participantTokenAccount.address,
+              signer: participant.publicKey,
+              swapProposal,
+              swapTokenVault,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([participant])
+            .instruction()
+        );
       })
     );
 
@@ -394,19 +398,21 @@ describe("transfer_assets", async () => {
           swapTokenVaultBump,
           actionType: { redeeming: {} },
         };
-        return program.methods
-          // @ts-ignore
-          .transferAssetsFromVault(params)
-          .accounts({
-            signerTokenAccount: proposalOwnerTokenAccount.address,
-            signer: proposalOwner.publicKey,
-            swapProposal,
-            swapTokenVault,
-            swapRegistry,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([proposalOwner])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsFromVault(params)
+            .accounts({
+              signerTokenAccount: proposalOwnerTokenAccount.address,
+              signer: proposalOwner.publicKey,
+              swapProposal,
+              swapTokenVault,
+              swapRegistry,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([proposalOwner])
+            .instruction()
+        );
       })
     );
 
@@ -457,19 +463,21 @@ describe("transfer_assets", async () => {
           swapTokenVaultBump,
           actionType: { redeeming: {} },
         };
-        return program.methods
-          // @ts-ignore
-          .transferAssetsFromVault(params)
-          .accounts({
-            signerTokenAccount: participantTokenAccount.address,
-            signer: participant.publicKey,
-            swapProposal,
-            swapTokenVault,
-            swapRegistry,
-            mintAccount: mintNormalPublicKey,
-          })
-          .signers([participant])
-          .instruction();
+        return (
+          program.methods
+            // @ts-ignore
+            .transferAssetsFromVault(params)
+            .accounts({
+              signerTokenAccount: participantTokenAccount.address,
+              signer: participant.publicKey,
+              swapProposal,
+              swapTokenVault,
+              swapRegistry,
+              mintAccount: mintNormalPublicKey,
+            })
+            .signers([participant])
+            .instruction()
+        );
       })
     );
 
