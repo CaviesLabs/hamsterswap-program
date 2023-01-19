@@ -1,69 +1,80 @@
 import * as anchor from "@project-serum/anchor";
 import {
-  AnchorError,
   BN,
-  BorshCoder,
-  EventParser,
-  Program,
+  Program
 } from "@project-serum/anchor";
-import { PublicKey, Keypair, SendTransactionError, AddressLookupTableProgram } from "@solana/web3.js";
-import { expect } from "chai";
+import { PublicKey, AddressLookupTableProgram } from "@solana/web3.js";
 
 import { Swap } from "../target/types/swap";
+import { V0transactionProvider } from "../client/v0transaction.provider";
+import { expect } from "chai";
 
 describe("modify_lookup_table", async () => {
-    // Configure the client to use the local cluster.
-    const provider = anchor.AnchorProvider.env();
-    anchor.setProvider(provider);
+  // Configure the client to use the local cluster.
+  const provider = anchor.AnchorProvider.env();
+  anchor.setProvider(provider);
 
-    const program = anchor.workspace.Swap as Program<Swap>;
-    const deployer = provider.wallet as anchor.Wallet;
-    const otherUser = Keypair.generate();
+  const program = anchor.workspace.Swap as Program<Swap>;
+  const deployer = provider.wallet as anchor.Wallet;
 
-    // find the swap account
-    const [swapAccount] = await PublicKey.findProgramAddress(
-      [anchor.utils.bytes.utf8.encode("SEED::SWAP::PLATFORM")],
-      program.programId
-    );
+  const slot = await provider.connection.getSlot({
+    commitment: "finalized"
+  });
+
+  const [lookupTableRegistry] = await PublicKey.findProgramAddress(
+    [
+      anchor.utils.bytes.utf8.encode("SEED::SWAP::LOOKUP_TABLE_SEED"),
+      deployer.publicKey.toBytes(),
+    ],
+    program.programId
+  );
+
+  const [,lookupTableAddress] =
+    AddressLookupTableProgram.createLookupTable({
+      authority: deployer.publicKey,
+      payer: deployer.publicKey,
+      recentSlot: slot
+    });
 
   it("[modify_lookup_table] should: create lookup table successfully", async () => {
-    const slot = await provider.connection.getSlot({
-      commitment: "finalized",
-    });
-
-    const [,lookupTableAddress] =
-      AddressLookupTableProgram.createLookupTable({
-        authority: swapAccount,
-        payer: deployer.publicKey,
-        recentSlot: await provider.connection.getSlot({
-          commitment: "finalized",
-        }),
-      });
-
-    console.log({
-      signer: deployer.publicKey.toBase58(),
-      swapRegistry: swapAccount.toBase58(),
-      lookupTableAddress: lookupTableAddress.toBase58()
-    });
+    const createLookupTableRegistryInx = await program.methods
+      .initializeAddressLookupTable()
+      .accounts({
+        lookupTableRegistry: lookupTableRegistry,
+        signer: deployer.publicKey
+      }).instruction();
 
     // Initialize first
-    const inst = await program.methods
+    const createLookupTableInx = await program.methods
+      // @ts-ignore
       .modifyAddressLookupTable({
         slot: new BN(slot),
-        whitelistedAddresses: [],
-        actionType: {createLookupTable: {}},
       })
       .accounts({
-        swapRegistry: swapAccount,
+        lookupTableRegistry,
         lookupTableAccount: lookupTableAddress,
         signer: deployer.publicKey,
         lookupTableProgram: AddressLookupTableProgram.programId
-      })
-      .signers([deployer.payer])
-      .rpc({ commitment: "confirmed" }).catch(e => console.log(e));
+      }).instruction();
 
-    const state = await program.account.swapPlatformRegistry.fetch(swapAccount);
-    console.log(state);
+    const extendLookupTableInx = AddressLookupTableProgram.extendLookupTable({
+      lookupTable: lookupTableAddress,
+      authority: deployer.publicKey,
+      payer: deployer.publicKey,
+      addresses: [deployer.publicKey],
+    });
+
+    const v0TransactionProvider = new V0transactionProvider();
+    await v0TransactionProvider.sendAndConfirmV0Transaction(
+      provider,
+      [createLookupTableRegistryInx, createLookupTableInx, extendLookupTableInx],
+      deployer.payer
+    ).then(res => res).catch(e => console.log(e));
+
+    const state = await program.account.lookupTableRegistry.fetch(lookupTableRegistry);
+    const lookupTableAccount = await provider.connection.getAddressLookupTable(lookupTableAddress).then(res => res.value);
+
+    expect(state.lookupTableAddresses.filter(elm => elm.equals(lookupTableAddress)).length > 0).to.be.true;
+    expect(lookupTableAccount.state.addresses.filter(elm => elm.equals(deployer.publicKey)).length > 0).to.be.true;
   });
-
 });

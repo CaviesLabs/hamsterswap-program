@@ -33,9 +33,6 @@ pub struct SwapPlatformRegistry {
 
     // define whitelisted mint token account
     pub allowed_mint_accounts: Vec<MintInfo>,
-
-    // Define the lookup table for the whole program
-    pub address_lookup_table: Vec<Pubkey>
 }
 
 // Define handler
@@ -359,4 +356,18 @@ impl SwapProposal {
 
         return Ok(());
     }
+}
+
+// Here we define the account state that holds the lookup table for every users.
+#[account]
+#[derive(Default)]
+pub struct LookupTableRegistry {
+    // Bump to help define the PDA of swap order.
+    pub bump: u8,
+
+    // Define the owner of the proposal
+    pub owner: Pubkey,
+
+    // Define the lookup table for specific users
+    pub lookup_table_addresses: Vec<Pubkey>
 }

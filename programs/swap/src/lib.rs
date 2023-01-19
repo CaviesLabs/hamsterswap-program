@@ -108,10 +108,21 @@ pub mod swap {
 
     // modify address lookup table
     pub fn modify_address_lookup_table(
-        ctx: Context<ModifyAddressLookupTableContext>,
-        params: ModifyAddressLookupTableParams
+        ctx: Context<CreateAddressLookupTableContext>,
+        params: CreateAddressLookupTableParams
     ) -> Result<()> {
         ctx.accounts.execute(params).unwrap();
+
+        Ok(())
+    }
+
+    // modify address lookup table
+    pub fn initialize_address_lookup_table(
+        ctx: Context<InitializeAddressLookupTableContext>,
+    ) -> Result<()> {
+        ctx.accounts.execute(
+            *ctx.bumps.get("lookup_table_registry").unwrap(),
+        ).unwrap();
 
         Ok(())
     }

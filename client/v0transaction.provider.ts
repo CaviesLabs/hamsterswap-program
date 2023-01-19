@@ -18,7 +18,7 @@ export class V0transactionProvider {
     provider: AnchorProvider,
     instructions: TransactionInstruction[],
     signer: Keypair
-  ) {
+  ): Promise<string> {
     const latestBlockHash = await provider.connection.getLatestBlockhash();
 
     const lookupMessage = new TransactionMessage({
@@ -33,7 +33,8 @@ export class V0transactionProvider {
     const txid = await provider.connection.sendRawTransaction(
       lookupTransaction.serialize()
     );
-    return provider.connection.confirmTransaction(
+
+    await provider.connection.confirmTransaction(
       {
         signature: txid,
         blockhash: latestBlockHash.blockhash,
@@ -41,6 +42,8 @@ export class V0transactionProvider {
       },
       "finalized"
     );
+
+    return txid;
   }
 
   /**
@@ -55,7 +58,7 @@ export class V0transactionProvider {
     instructions: TransactionInstruction[],
     lookupTableAccounts: AddressLookupTableAccount[],
     signer: Keypair
-  ) {
+  ): Promise<string> {
     const latestBlockHash = await provider.connection.getLatestBlockhash();
     const lookupMessage = new TransactionMessage({
       payerKey: signer.publicKey,
@@ -69,7 +72,7 @@ export class V0transactionProvider {
     const txid = await provider.connection.sendRawTransaction(
       lookupTransaction.serialize()
     );
-    return provider.connection.confirmTransaction(
+    await provider.connection.confirmTransaction(
       {
         signature: txid,
         blockhash: latestBlockHash.blockhash,
@@ -77,5 +80,6 @@ export class V0transactionProvider {
       },
       "confirmed"
     );
+    return txid;
   }
 }
